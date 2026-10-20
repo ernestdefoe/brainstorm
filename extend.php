@@ -10,6 +10,7 @@
  */
 
 use ErnestDefoe\Gauntlet\Api;
+use ErnestDefoe\Gauntlet\Content\QuizDocument;
 use ErnestDefoe\Gauntlet\Event\AttemptFinished;
 use ErnestDefoe\Gauntlet\Integration\Badges\BadgesProvider;
 use ErnestDefoe\Gauntlet\Integration\Onramp\PassQuizzesStep;
@@ -34,7 +35,7 @@ return [
         ->route('/quizzes', 'gauntlet.index')
         ->route('/quizzes/new', 'gauntlet.new')
         ->route('/quizzes/leaderboard', 'gauntlet.leaderboard')
-        ->route('/quizzes/{id:\d+(?:-[^/]*)?}', 'gauntlet.quiz')
+        ->route('/quizzes/{id:\d+(?:-[^/]*)?}', 'gauntlet.quiz', QuizDocument::class)
         ->route('/quizzes/{id:\d+}/edit', 'gauntlet.edit'),
 
     (new Extend\Frontend('admin'))

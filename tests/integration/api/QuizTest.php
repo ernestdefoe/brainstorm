@@ -456,6 +456,20 @@ class QuizTest extends TestCase
     }
 
     #[Test]
+    public function the_quiz_page_carries_its_title_for_link_previews_but_never_a_drafts(): void
+    {
+        $quiz = $this->quiz();
+        $draft = $this->quiz(['status' => 'draft', 'title' => 'Secret upcoming quiz']);
+
+        $html = (string) $this->send($this->request('GET', '/quizzes/'.$quiz['id'].'-capitals'))->getBody();
+        $this->assertStringContainsString('<meta property="og:title" content="Capitals">', $html);
+        $this->assertStringContainsString('<meta property="og:description" content="How well do you', $html);
+
+        $html = (string) $this->send($this->request('GET', '/quizzes/'.$draft['id'], ['authenticatedAs' => 2]))->getBody();
+        $this->assertStringNotContainsString('Secret upcoming quiz', $html);
+    }
+
+    #[Test]
     public function an_image_has_to_be_a_web_address(): void
     {
         foreach (['javascript:alert(1)', "java\tscript:alert(1)", '//evil.example/x.png', "https://ok.example/\x01"] as $url) {
