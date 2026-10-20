@@ -16,7 +16,7 @@ return Migration::createTable('quiz_bests', function (Blueprint $table) {
     $table->decimal('percent', 5, 2);
     $table->unsignedInteger('duration');
     $table->boolean('passed');
-    $table->unsignedSmallInteger('attempts')->default(1);
+    $table->unsignedInteger('attempts')->default(1);
     $table->dateTime('first_passed_at')->nullable();
     $table->dateTime('achieved_at');
 

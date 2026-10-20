@@ -470,6 +470,124 @@ class QuizTest extends TestCase
     }
 
     #[Test]
+    public function an_earlier_result_hides_the_key_while_the_last_attempt_is_open(): void
+    {
+        $quiz = $this->quiz(['reveal' => 'answers', 'maxAttempts' => 2]);
+        $first = $this->submit($this->start($quiz['id'])['id'], []);
+        $this->assertFalse($first['answersShown']);
+
+        // The last attempt is open: the first one's result must not carry the key.
+        $this->start($quiz['id']);
+        [, $again, $raw] = $this->json('GET', '/api/quiz-attempts/'.$first['id'], 2);
+        $this->assertFalse($again['data']['answersShown']);
+        $this->assertStringNotContainsString('"correct"', $raw);
+        $this->assertStringNotContainsString('SECRET-EXPLANATION', $raw);
+    }
+
+    #[Test]
+    public function an_attempt_cannot_outlive_the_quiz_closing(): void
+    {
+        Carbon::setTestNow(Carbon::now());
+        $quiz = $this->quiz(['closesAt' => Carbon::now()->addMinute()->toIso8601String()]);
+        $paper = $this->start($quiz['id']);
+        $this->assertLessThanOrEqual(60, $paper['secondsLeft']);
+
+        Carbon::setTestNow(Carbon::now()->addDays(2));
+        $result = $this->submit($paper['id'], $this->key($quiz));
+        $this->assertTrue($result['expired']);
+        $this->assertSame(0.0, (float) $result['score']);
+    }
+
+    #[Test]
+    public function an_update_only_changes_what_it_sends(): void
+    {
+        $quiz = $this->quiz(['timeLimit' => 120, 'maxAttempts' => 3, 'status' => 'draft']);
+
+        [$status] = $this->json('PATCH', '/api/quizzes/'.$quiz['id'], 1, ['data' => ['status' => 'published']]);
+        $this->assertSame(200, $status);
+
+        $row = $this->database()->table('quizzes')->where('id', $quiz['id'])->first();
+        $this->assertSame('published', $row->status);
+        $this->assertSame(120, (int) $row->time_limit);
+        $this->assertSame(3, (int) $row->max_attempts);
+        $this->assertSame(4, (int) $row->question_count);
+        $this->assertSame(4, $this->database()->table('quiz_questions')->where('quiz_id', $quiz['id'])->count());
+        $this->assertNotNull($row->description);
+    }
+
+    #[Test]
+    public function an_author_cannot_change_how_a_rewarded_quiz_is_marked(): void
+    {
+        $this->prepareDatabase(['group_permission' => [['group_id' => Group::MEMBER_ID, 'permission' => 'gauntlet.create']]]);
+        [, $made] = $this->json('POST', '/api/quizzes', 2, ['data' => [
+            'title' => 'Mine', 'status' => 'published', 'passMark' => 80,
+            'questions' => [['type' => 'boolean', 'body' => 'Yes?', 'options' => [['id' => 'true', 'correct' => true]]]],
+        ]]);
+        $id = $made['data']['id'];
+
+        // An admin attaches points.
+        [$status] = $this->json('PATCH', "/api/quizzes/$id", 1, ['data' => ['rewardPoints' => 50]]);
+        $this->assertSame(200, $status);
+
+        [$status] = $this->json('PATCH', "/api/quizzes/$id", 2, ['data' => ['passMark' => 0]]);
+        $this->assertSame(422, $status, 'pass mark');
+        [$status] = $this->json('PATCH', "/api/quizzes/$id", 2, ['data' => ['questions' => [['type' => 'boolean', 'body' => 'Yes?', 'options' => [['id' => 'true', 'correct' => false]]]]]]);
+        $this->assertSame(422, $status, 'answer key');
+        $this->assertSame(80, (int) $this->database()->table('quizzes')->where('id', $id)->value('pass_mark'));
+
+        // The wording is still theirs to fix.
+        [$status] = $this->json('PATCH', "/api/quizzes/$id", 2, ['data' => ['title' => 'Mine, retitled', 'questions' => [['type' => 'boolean', 'body' => 'Yes, really?', 'options' => [['id' => 'true', 'correct' => true]]]]]]);
+        $this->assertSame(200, $status);
+    }
+
+    #[Test]
+    public function a_member_made_an_editor_mid_attempt_is_practising(): void
+    {
+        $quiz = $this->quiz();
+        $paper = $this->start($quiz['id'], 3);
+
+        $this->database()->table('group_user')->insert(['user_id' => 3, 'group_id' => Group::MODERATOR_ID]);
+        $result = $this->submit($paper['id'], $this->key($quiz), 3);
+
+        $this->assertTrue($result['practice']);
+        $this->assertSame(0, $this->database()->table('quiz_bests')->where('user_id', 3)->count());
+    }
+
+    #[Test]
+    public function a_retake_after_seeing_the_key_does_not_climb_the_board(): void
+    {
+        $quiz = $this->quiz(['reveal' => 'answers_always']);
+        $key = $this->key($quiz);
+        $ids = array_keys($key);
+
+        $half = [$ids[0] => $key[$ids[0]], $ids[1] => $key[$ids[1]]];
+        $this->submit($this->start($quiz['id'])['id'], $half);
+        $this->submit($this->start($quiz['id'])['id'], $key);
+
+        $best = $this->database()->table('quiz_bests')->where('user_id', 2)->first();
+        $this->assertSame(50.0, (float) $best->percent, 'the first, unseen attempt is what ranks');
+        $this->assertSame(2, (int) $best->attempts);
+    }
+
+    #[Test]
+    public function an_image_may_be_a_path_on_this_forum(): void
+    {
+        [$status] = $this->json('POST', '/api/quizzes', 1, ['data' => [
+            'title' => 'Local image',
+            'questions' => [['type' => 'boolean', 'body' => 'Yes?', 'imageUrl' => '/assets/files/2026-10-20/cat.png', 'options' => [['id' => 'true', 'correct' => true]]]],
+        ]]);
+        $this->assertSame(201, $status);
+
+        foreach (['//evil.example/x.png', '/\\evil.example/x.png'] as $url) {
+            [$status] = $this->json('POST', '/api/quizzes', 1, ['data' => [
+                'title' => 'Images',
+                'questions' => [['type' => 'boolean', 'body' => 'Yes?', 'imageUrl' => $url, 'options' => [['id' => 'true', 'correct' => true]]]],
+            ]]);
+            $this->assertSame(422, $status, $url);
+        }
+    }
+
+    #[Test]
     public function an_image_has_to_be_a_web_address(): void
     {
         foreach (['javascript:alert(1)', "java\tscript:alert(1)", '//evil.example/x.png', "https://ok.example/\x01"] as $url) {

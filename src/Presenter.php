@@ -170,6 +170,13 @@ class Presenter
                 $texts[(string) $o['id']] = (string) ($o['text'] ?? '');
             }
 
+            // The order dealt, then any option added since the attempt began;
+            // none at all for a typed answer, whose "options" are the key.
+            $order = $q->type === 'text' ? [] : array_values(array_unique(array_merge(
+                array_values(array_filter($slot['o'], fn ($id) => isset($texts[$id]))),
+                array_keys($texts)
+            )));
+
             $slots[] = [
                 'id' => $q->id,
                 'type' => $q->type,
@@ -177,7 +184,7 @@ class Presenter
                 'imageUrl' => $q->image_url,
                 'points' => $q->points,
                 // Only ids and labels. True/false labels are translated in the browser.
-                'options' => array_values(array_map(fn ($id) => ['id' => $id, 'text' => $q->type === 'boolean' ? '' : ($texts[$id] ?? '')], array_filter($slot['o'], fn ($id) => isset($texts[$id])))),
+                'options' => array_map(fn ($id) => ['id' => (string) $id, 'text' => $q->type === 'boolean' ? '' : $texts[$id]], $order),
             ];
         }
 
@@ -206,13 +213,18 @@ class Presenter
     public function result(Attempt $attempt, User $actor): array
     {
         $quiz = $attempt->quiz;
-        $used = Attempt::query()->where('quiz_id', $quiz->id)->where('user_id', $attempt->user_id)->count();
+        $mine = Attempt::query()->where('quiz_id', $quiz->id)->where('user_id', $attempt->user_id)->get(['id', 'submitted_at']);
+        $used = $mine->count();
+        $open = $mine->contains(fn (Attempt $a) => $a->submitted_at === null);
         $passedEver = (bool) $this->db->table('quiz_bests')->where('quiz_id', $quiz->id)->where('user_id', $attempt->user_id)->value('passed');
-        $done = $passedEver || ($quiz->max_attempts && $used >= $quiz->max_attempts);
+        $done = $passedEver || ($quiz->max_attempts && $used >= $quiz->max_attempts && ! $open);
 
-        $level = Access::canEdit($actor, $quiz) ? 'answers_always' : $quiz->reveal;
+        $editor = Access::canEdit($actor, $quiz);
+        $level = $editor ? 'answers_always' : $quiz->reveal;
         $marks = $level !== 'score';
-        $key = $level === 'answers_always' || ($level === 'answers' && $done);
+        // 🚨 Never while the member has an attempt open: an earlier result
+        // must not hand them the key to the paper in front of them.
+        $key = ($editor || ! $open) && ($level === 'answers_always' || ($level === 'answers' && $done));
 
         $review = null;
         if ($marks) {
@@ -252,7 +264,7 @@ class Presenter
                     'bodyHtml' => $this->rich->html($q->body, $quiz),
                     'imageUrl' => $q->image_url,
                     'points' => $q->points,
-                    'earned' => round($q->points * Scorer::fraction($q, $given, $quiz->partial_credit), 2),
+                    'earned' => (float) ($attempt->marks[(string) $q->id] ?? round($q->points * Scorer::fraction($q, $given, $quiz->partial_credit), 2)),
                     'options' => $options,
                     'typed' => $q->type === 'text' && is_string($given) ? $given : null,
                 ] + ($key ? [
@@ -278,6 +290,8 @@ class Presenter
             'attemptsUsed' => $used,
             'attemptsLeft' => $quiz->max_attempts ? max(0, $quiz->max_attempts - $used) : null,
             'answersShown' => $key,
+            // Whether the key is still to come for this member, so the page can say so.
+            'answersLater' => ! $key && $level === 'answers' && ! $done,
             'review' => $review,
         ];
     }

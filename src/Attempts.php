@@ -9,6 +9,7 @@ use Flarum\User\User;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Collection;
+use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
@@ -26,7 +27,8 @@ class Attempts
     public function __construct(
         private ConnectionInterface $db,
         private Dispatcher $events,
-        private TranslatorInterface $translator
+        private TranslatorInterface $translator,
+        private LoggerInterface $log
     ) {
     }
 
@@ -75,7 +77,13 @@ class Attempts
             $attempt->quiz_id = $quiz->id;
             $attempt->user_id = $user->id;
             $attempt->started_at = $now;
-            $attempt->deadline_at = $quiz->time_limit ? $now->copy()->addSeconds($quiz->time_limit) : null;
+            // The time limit, or the quiz closing, whichever comes first: an
+            // attempt opened just before closing can't be handed in after it.
+            $deadline = $quiz->time_limit ? $now->copy()->addSeconds($quiz->time_limit) : null;
+            if ($quiz->closes_at && (! $deadline || $quiz->closes_at->lt($deadline))) {
+                $deadline = $quiz->closes_at->copy();
+            }
+            $attempt->deadline_at = $deadline;
             $attempt->layout = $layout;
             $attempt->answers = [];
             $attempt->practice = $practice;
@@ -97,7 +105,11 @@ class Attempts
         }
 
         $attempt->answers = $this->clean($attempt, $answers, $this->questions($attempt));
-        $attempt->save();
+
+        // Only onto an unsubmitted row: an autosave that arrives just after
+        // the attempt was handed in must not replace the answers it was marked on.
+        Attempt::query()->whereKey($attempt->id)->whereNull('submitted_at')
+            ->update(['answers' => json_encode($attempt->answers ?: new \stdClass())]);
     }
 
     /**
@@ -111,8 +123,12 @@ class Attempts
         }
 
         $quiz = $attempt->quiz;
+        $user = $attempt->relationLoaded('user') ? $attempt->user : User::query()->findOrFail($attempt->user_id);
         $questions = $this->questions($attempt);
         $overdue = $attempt->isOverdue();
+        // Someone who could see the key by now (made an editor mid-attempt)
+        // is practising, whatever they were when they started.
+        $practice = $attempt->practice || Access::canEdit($user, $quiz);
 
         if (! $overdue && $answers !== null) {
             $attempt->answers = $this->clean($attempt, $answers, $questions);
@@ -120,15 +136,19 @@ class Attempts
 
         $score = 0.0;
         $max = 0.0;
+        // Each question's mark, kept with the attempt: the review shows what
+        // was marked, even if the quiz is edited afterwards.
+        $marks = [];
         foreach ($attempt->questionIds() as $id) {
             if ($question = $questions->get($id)) {
                 $max += $question->points;
-                $score += $question->points * Scorer::fraction($question, $attempt->answers[(string) $id] ?? null, $quiz->partial_credit);
+                $marks[(string) $id] = round($question->points * Scorer::fraction($question, $attempt->answers[(string) $id] ?? null, $quiz->partial_credit), 2);
+                $score += $marks[(string) $id];
             }
         }
 
         $now = Carbon::now();
-        $finishedAt = $overdue ? $attempt->deadline_at->copy() : $now;
+        $finishedAt = $overdue || ($attempt->deadline_at && $attempt->deadline_at->lt($now)) ? $attempt->deadline_at->copy() : $now;
         $duration = max(0, $finishedAt->getTimestamp() - $attempt->started_at->getTimestamp());
         if ($quiz->time_limit) {
             $duration = min($duration, $quiz->time_limit);
@@ -139,7 +159,7 @@ class Attempts
         // Compared unrounded, so 69.995% never passes a 70% mark.
         $passed = $max > 0 && $score * 100 >= $quiz->pass_mark * $max - 1e-9;
 
-        $firstPass = $this->db->transaction(function () use ($attempt, $quiz, $score, $max, $percent, $passed, $duration, $finishedAt, $overdue) {
+        $firstPass = $this->db->transaction(function () use ($attempt, $quiz, $score, $max, $percent, $passed, $duration, $finishedAt, $overdue, $practice, $marks) {
             // Marked once: the update only lands on an unsubmitted row, so a
             // double click or a retried request can't mark it twice.
             $won = Attempt::query()->whereKey($attempt->id)->whereNull('submitted_at')->update([
@@ -151,9 +171,11 @@ class Attempts
                 'passed' => $passed,
                 'duration' => $duration,
                 'expired' => $overdue,
+                'practice' => $practice,
+                'marks' => json_encode($marks ?: new \stdClass()),
             ]);
 
-            if (! $won || $attempt->practice) {
+            if (! $won || $practice) {
                 return null;
             }
 
@@ -169,7 +191,6 @@ class Attempts
                 $quiz->increment('pass_count');
             }
 
-            $user = $attempt->relationLoaded('user') ? $attempt->user : User::query()->findOrFail($attempt->user_id);
             $this->events->dispatch(new AttemptFinished($fresh, $user, $firstPass));
         }
 
@@ -177,27 +198,33 @@ class Attempts
     }
 
     /**
-     * Mark every attempt whose clock ran out while nobody was looking — the
-     * tab was closed, the battery died. Cheap when there are none: one
-     * indexed select.
+     * Mark attempts whose clock ran out while nobody was looking — the tab
+     * was closed, the battery died. Cheap when there are none: one select on
+     * the (quiz, submitted, deadline) index. A few at a time, so a page view
+     * never does a backlog's work; one that fails is logged and skipped.
      */
     public function expireOverdue(Quiz $quiz, ?User $user = null): void
     {
-        if (! $quiz->time_limit) {
+        if (! $quiz->time_limit && ! $quiz->closes_at) {
             return;
         }
 
         $overdue = Attempt::query()
             ->where('quiz_id', $quiz->id)
-            ->when($user, fn ($q) => $q->where('user_id', $user->id))
             ->whereNull('submitted_at')
             ->where('deadline_at', '<', Carbon::now()->subSeconds(Attempt::GRACE))
-            ->limit(50)
+            ->when($user, fn ($q) => $q->where('user_id', $user->id))
+            ->limit(10)
             ->get();
 
         foreach ($overdue as $attempt) {
             $attempt->setRelation('quiz', $quiz);
-            $this->submit($attempt);
+
+            try {
+                $this->submit($attempt);
+            } catch (\Throwable $e) {
+                $this->log->error('[gauntlet] could not mark overdue attempt '.$attempt->id.': '.$e->getMessage());
+            }
         }
     }
 
@@ -208,7 +235,7 @@ class Attempts
             Attempt::query()->where('quiz_id', $quiz->id)->where('user_id', $userId)->delete();
             $this->db->table('quiz_bests')->where('quiz_id', $quiz->id)->where('user_id', $userId)->delete();
 
-            $quiz->attempt_count = Attempt::query()->where('quiz_id', $quiz->id)->whereNotNull('submitted_at')->count();
+            $quiz->attempt_count = Attempt::query()->where('quiz_id', $quiz->id)->whereNotNull('submitted_at')->where('practice', false)->count();
             $quiz->pass_count = $this->db->table('quiz_bests')->where('quiz_id', $quiz->id)->where('passed', true)->count();
             $quiz->save();
         });
@@ -242,8 +269,12 @@ class Attempts
             return $passed;
         }
 
-        $better = $percent > (float) $best->percent
-            || ($percent == (float) $best->percent && $duration < (int) $best->duration);
+        // Once the member has been shown the answer key — every result shows
+        // it on an `answers_always` quiz, and an `answers` quiz shows it once
+        // passed — a retake can't climb the leaderboard with it.
+        $keySeen = $quiz->reveal === 'answers_always' || ($quiz->reveal === 'answers' && $best->passed);
+        $better = ! $keySeen && ($percent > (float) $best->percent
+            || ($percent == (float) $best->percent && $duration < (int) $best->duration));
         $firstPass = $passed && $best->first_passed_at === null;
 
         (clone $table)->where($key)->update(($better ? $row : []) + [

@@ -88,7 +88,10 @@ export default class EditorPage extends Page {
   error: string | null = null;
   sorter = new Sortable<EditableQuestion>(
     () => this.quiz!.questions,
-    () => (this.dirty = true)
+    () => {
+      this.dirty = true;
+    },
+    text('sortable')
   );
 
   oninit(vnode: Mithril.Vnode) {
@@ -106,14 +109,17 @@ export default class EditorPage extends Page {
     );
 
     if (id) {
-      showQuiz(id, true).then(({ data }) => {
-        if (!data.edit) return m.route.set(quizUrl(data));
-        this.id = data.id;
-        this.slug = data.slug;
-        this.quiz = data.edit;
-        this.quiz.questions.forEach((q) => (q.key = key()));
-        m.redraw();
-      });
+      showQuiz(id, true).then(
+        ({ data }) => {
+          if (!data.edit) return m.route.set(quizUrl(data));
+          this.id = data.id;
+          this.slug = data.slug;
+          this.quiz = data.edit;
+          this.quiz.questions.forEach((q) => (q.key = key()));
+          m.redraw();
+        },
+        () => m.route.set(app.route('gauntlet.index'))
+      );
     } else {
       this.quiz = blankQuiz();
     }
@@ -260,7 +266,7 @@ export default class EditorPage extends Page {
               </Button>
             ) : null}
           </div>
-          {q.imageUrl && /^https?:\/\//i.test(q.imageUrl) ? (
+          {q.imageUrl && /^(https?:\/\/|\/(?![\/\\]))/i.test(q.imageUrl) ? (
             <img className="GauntletEditor-preview" src={q.imageUrl} alt="" loading="lazy" referrerpolicy="no-referrer" />
           ) : null}
 

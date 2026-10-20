@@ -4,7 +4,10 @@ import QuizCard from '../components/QuizCard';
 
 type Lookup = Promise<Quiz | null>;
 
-const cache = new Map<number, Lookup>();
+/** How long a looked-up quiz is reused: a post seen again later shows fresh standing. */
+const KEEP = 60_000;
+
+const cache = new Map<number, { at: number; quiz: Lookup }>();
 let pending = new Map<number, (q: Quiz | null) => void>();
 let timer = 0;
 
@@ -25,19 +28,24 @@ function flush(): void {
 
     listQuizzes({ filter: { ids: chunk.join(',') } }).then(
       ({ data }) => chunk.forEach((id) => batch.get(id)!(data.find((q) => q.id === id) || null)),
-      () => chunk.forEach((id) => batch.get(id)!(null))
+      () =>
+        chunk.forEach((id) => {
+          // A failed lookup is not remembered: the next page tries again.
+          cache.delete(id);
+          batch.get(id)!(null);
+        })
     );
   }
 }
 
 function lookup(id: number): Lookup {
-  let found = cache.get(id);
-  if (!found) {
-    found = new Promise((resolve) => pending.set(id, resolve));
-    cache.set(id, found);
-    timer ||= window.setTimeout(flush, 0);
-  }
-  return found;
+  const found = cache.get(id);
+  if (found && Date.now() - found.at < KEEP) return found.quiz;
+
+  const quiz: Lookup = new Promise((resolve) => pending.set(id, resolve));
+  cache.set(id, { at: Date.now(), quiz });
+  timer ||= window.setTimeout(flush, 0);
+  return quiz;
 }
 
 export default function embed(links: Array<[HTMLAnchorElement, number]>): void {

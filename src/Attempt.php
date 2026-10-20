@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $duration
  * @property bool $expired
  * @property bool $practice
+ * @property array<string, float>|null $marks
  * @property Quiz $quiz
  * @property User $user
  */
@@ -50,6 +51,7 @@ class Attempt extends AbstractModel
         'duration' => 'integer',
         'expired' => 'boolean',
         'practice' => 'boolean',
+        'marks' => 'array',
     ];
 
     /** @return BelongsTo<Quiz, $this> */

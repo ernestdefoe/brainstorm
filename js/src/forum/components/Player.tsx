@@ -44,6 +44,8 @@ export default class Player extends Component<Attrs> {
   ticker = 0;
   saver = 0;
   error: string | null = null;
+  /** One autosave on the wire at a time, so an older one can never land last. */
+  saving = false;
 
   oninit(vnode: Mithril.Vnode<Attrs, this>) {
     super.oninit(vnode);
@@ -55,12 +57,34 @@ export default class Player extends Component<Attrs> {
     }
   }
 
+  oncreate(vnode: Mithril.VnodeDOM<Attrs, this>) {
+    super.oncreate(vnode);
+    window.addEventListener('pagehide', this.flush);
+  }
+
   onremove(vnode: Mithril.VnodeDOM<Attrs, this>) {
     super.onremove(vnode);
     this.stop();
-    // Leaving mid-quiz keeps what was answered.
-    if (this.dirty && this.paper && this.phase !== 'result') saveAnswers(this.paper.id, this.answers).catch(() => {});
+    window.removeEventListener('pagehide', this.flush);
+    // Leaving mid-quiz (another page) keeps what was answered.
+    this.flush();
   }
+
+  /**
+   * The answers not yet saved, sent as the page goes away: a keepalive
+   * request outlives the tab being closed, which an ordinary one does not.
+   */
+  flush = () => {
+    if (!this.dirty || !this.paper || this.phase === 'result' || this.phase === 'submitting') return;
+    this.dirty = false;
+    fetch(app.forum.attribute<string>('apiUrl') + '/quiz-attempts/' + this.paper.id, {
+      method: 'POST',
+      keepalive: true,
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'X-HTTP-Method-Override': 'PATCH', 'X-CSRF-Token': app.session.csrfToken || '' },
+      body: JSON.stringify({ data: { answers: this.answers } }),
+    }).catch(() => {});
+  };
 
   begin() {
     this.phase = 'loading';
@@ -118,15 +142,24 @@ export default class Player extends Component<Attrs> {
   }
 
   save() {
-    if (!this.dirty || !this.paper || this.phase === 'result' || this.phase === 'submitting') return;
+    if (!this.dirty || !this.paper || this.saving || this.phase === 'result' || this.phase === 'submitting') return;
     this.dirty = false;
-    saveAnswers(this.paper.id, this.answers).then(
-      ({ data }) => {
-        // Re-sync the countdown with the server's view of the time left.
-        if (data.secondsLeft !== null && this.endsAt !== null) this.endsAt = performance.now() + data.secondsLeft * 1000;
-      },
-      () => (this.dirty = true)
-    );
+    this.saving = true;
+    saveAnswers(this.paper.id, { ...this.answers })
+      .then(
+        ({ data }) => {
+          // Re-sync the countdown with the server's view of the time left.
+          if (data.secondsLeft !== null && this.endsAt !== null) this.endsAt = performance.now() + data.secondsLeft * 1000;
+        },
+        () => {
+          this.dirty = true;
+        }
+      )
+      .finally(() => {
+        this.saving = false;
+        // Answers changed while that one was on the wire: send them now.
+        if (this.dirty) this.save();
+      });
   }
 
   go(index: number) {

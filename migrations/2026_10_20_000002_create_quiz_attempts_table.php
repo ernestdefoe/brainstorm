@@ -19,6 +19,8 @@ return Migration::createTable('quiz_attempts', function (Blueprint $table) {
     $table->dateTime('submitted_at')->nullable();
     $table->text('layout');
     $table->text('answers')->nullable();
+    // Each question's mark when it was marked, by question id.
+    $table->text('marks')->nullable();
     $table->decimal('score', 10, 2)->nullable();
     $table->decimal('max_score', 10, 2)->nullable();
     $table->decimal('percent', 5, 2)->nullable();
@@ -34,5 +36,7 @@ return Migration::createTable('quiz_attempts', function (Blueprint $table) {
     $table->foreign('quiz_id')->references('id')->on('quizzes')->cascadeOnDelete();
     $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
     $table->index(['quiz_id', 'user_id']);
+    // Finding attempts whose clock ran out.
+    $table->index(['quiz_id', 'submitted_at', 'deadline_at']);
     $table->index(['user_id', 'started_at']);
 });

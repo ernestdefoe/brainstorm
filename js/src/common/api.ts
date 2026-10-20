@@ -140,6 +140,7 @@ export interface Result {
   attemptsUsed: number;
   attemptsLeft: number | null;
   answersShown: boolean;
+  answersLater: boolean;
   review: ReviewQuestion[] | null;
 }
 

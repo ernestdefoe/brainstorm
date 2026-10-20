@@ -40,7 +40,13 @@ export default class QuizCard extends Component<Attrs> {
         </header>
 
         {this.playing ? (
-          <Player quiz={quiz} onfinish={(r: Result) => recordFinish(quiz, r)} onclose={() => (this.playing = false)} />
+          <Player
+            quiz={quiz}
+            onfinish={(r: Result) => recordFinish(quiz, r)}
+            onclose={() => {
+              this.playing = false;
+            }}
+          />
         ) : (
           [
             embedded && quiz.descriptionHtml ? <div className="GauntletCard-description Post-body">{m.trust(quiz.descriptionHtml)}</div> : null,

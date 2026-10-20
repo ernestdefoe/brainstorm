@@ -37,7 +37,7 @@ class ListQuizzesController implements RequestHandlerInterface
         $query = Quiz::query()->visibleTo($actor)->with('user');
 
         if (is_string($ids = $filter['ids'] ?? null)) {
-            $ids = array_slice(array_values(array_unique(array_filter(explode(',', $ids), 'ctype_digit'))), 0, 50);
+            $ids = array_slice(array_values(array_unique(array_filter(explode(',', $ids), fn ($id) => ctype_digit($id) && strlen($id) <= 10 && (int) $id <= 2147483647))), 0, 50);
             $query->whereIn('id', $ids ?: [0]);
         } else {
             if (! empty($filter['mine']) && ! $actor->isGuest()) {

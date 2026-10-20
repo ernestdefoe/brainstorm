@@ -31,11 +31,17 @@ class Saver
     ) {
     }
 
-    /** @param array<string, mixed> $data */
+    /**
+     * On an update only the keys sent are touched: a client that sends
+     * `{status}` alone publishes the quiz and leaves everything else as it was.
+     *
+     * @param array<string, mixed> $data
+     */
     public function save(?Quiz $quiz, array $data, User $actor): Quiz
     {
         $quiz ??= new Quiz();
         $isNew = ! $quiz->exists;
+        $has = fn (string $key) => $isNew || array_key_exists($key, $data);
 
         $title = trim((string) Arr::get($data, 'title', $quiz->title ?? ''));
         if ($title === '' || mb_strlen($title) > 200) {
@@ -52,19 +58,21 @@ class Saver
             $reveal = 'answers';
         }
 
-        $opensAt = $this->date(Arr::get($data, 'opensAt'));
-        $closesAt = $this->date(Arr::get($data, 'closesAt'));
+        $opensAt = $has('opensAt') ? $this->date(Arr::get($data, 'opensAt')) : $quiz->opens_at;
+        $closesAt = $has('closesAt') ? $this->date(Arr::get($data, 'closesAt')) : $quiz->closes_at;
         if ($opensAt && $closesAt && $closesAt->lte($opensAt)) {
             $this->fail('closesAt', 'dates');
         }
 
-        $questions = $this->questions(Arr::get($data, 'questions', []));
+        $questions = $has('questions') ? $this->questions(Arr::get($data, 'questions', [])) : null;
 
-        if ($status === 'published' && ! $questions) {
+        if ($status === 'published' && ($questions === null ? ! $quiz->question_count : ! $questions)) {
             $this->fail('status', 'publish_empty');
         }
 
-        return $this->db->transaction(function () use ($quiz, $isNew, $data, $actor, $title, $status, $reveal, $opensAt, $closesAt, $questions) {
+        return $this->db->transaction(function () use ($quiz, $isNew, $has, $data, $actor, $title, $status, $reveal, $opensAt, $closesAt, $questions) {
+            $before = $isNew ? null : $this->marking($quiz, $quiz->questions()->get()->all());
+
             if ($isNew) {
                 $quiz->user_id = $actor->id;
             }
@@ -72,26 +80,39 @@ class Saver
             $quiz->title = $title;
             $quiz->slug = Str::limit(Str::slug($title), 190, '') ?: 'quiz';
             $quiz->status = $status;
-            $quiz->time_limit = $this->int($data, 'timeLimit', 10, 86400);
-            $quiz->pass_mark = $this->int($data, 'passMark', 0, 100) ?? 70;
-            $quiz->max_attempts = $this->int($data, 'maxAttempts', 1, 1000);
-            $quiz->question_pick = $this->int($data, 'questionPick', 1, self::MAX_QUESTIONS);
-            $quiz->shuffle_questions = (bool) Arr::get($data, 'shuffleQuestions', false);
-            $quiz->shuffle_options = (bool) Arr::get($data, 'shuffleOptions', true);
-            $quiz->partial_credit = (bool) Arr::get($data, 'partialCredit', false);
             $quiz->reveal = $reveal;
-            $quiz->leaderboard = (bool) Arr::get($data, 'leaderboard', true);
             $quiz->opens_at = $opensAt;
             $quiz->closes_at = $closesAt;
-            $quiz->question_count = count($questions);
+
+            foreach ([
+                'time_limit' => ['timeLimit', 10, 86400],
+                'max_attempts' => ['maxAttempts', 1, 1000],
+                'question_pick' => ['questionPick', 1, self::MAX_QUESTIONS],
+            ] as $column => [$key, $min, $max]) {
+                if ($has($key)) {
+                    $quiz->$column = $this->int($data, $key, $min, $max);
+                }
+            }
+            if ($has('passMark')) {
+                $quiz->pass_mark = $this->int($data, 'passMark', 0, 100) ?? 70;
+            }
+            foreach (['shuffle_questions' => ['shuffleQuestions', false], 'shuffle_options' => ['shuffleOptions', true], 'partial_credit' => ['partialCredit', false], 'leaderboard' => ['leaderboard', true]] as $column => [$key, $default]) {
+                if ($has($key)) {
+                    $quiz->$column = (bool) Arr::get($data, $key, $default);
+                }
+            }
 
             if ($status === 'published' && ! $quiz->published_at) {
                 $quiz->published_at = Carbon::now();
             }
 
             if (Access::canReward($actor)) {
-                $quiz->reward_points = $this->int($data, 'rewardPoints', -100000, 100000) ?? 0;
-                $quiz->reward_badge_id = $this->badge(Arr::get($data, 'rewardBadgeId'));
+                if ($has('rewardPoints')) {
+                    $quiz->reward_points = $this->int($data, 'rewardPoints', -100000, 100000) ?? 0;
+                }
+                if ($has('rewardBadgeId')) {
+                    $quiz->reward_badge_id = $this->badge(Arr::get($data, 'rewardBadgeId'));
+                }
             } elseif ($isNew) {
                 $quiz->reward_points = 0;
                 $quiz->reward_badge_id = null;
@@ -101,13 +122,49 @@ class Saver
             if ($isNew) {
                 $quiz->save();
             }
-            $quiz->description = $this->rich->store((string) Arr::get($data, 'description', ''), $quiz, $actor);
-            $quiz->save();
+            if ($has('description')) {
+                $quiz->description = $this->rich->store((string) Arr::get($data, 'description', ''), $quiz, $actor);
+            }
 
-            $this->syncQuestions($quiz, $questions, $actor);
+            if ($questions !== null) {
+                $quiz->question_count = count($questions);
+                $this->syncQuestions($quiz, $questions, $actor);
+            }
+
+            /*
+             * 🚨 A quiz that pays a reward is marked the way the person who
+             * attached the reward saw it. Anyone without the reward permission
+             * may still fix its wording, but not its marking — a pass mark of 0
+             * or a rewritten key would pay whoever they sent to take it.
+             */
+            if ($before !== null && ! Access::canReward($actor) && ($quiz->reward_points || $quiz->reward_badge_id)
+                && $before !== $this->marking($quiz, Question::query()->where('quiz_id', $quiz->id)->get()->all())) {
+                $this->fail('questions', 'reward_locked');
+            }
+
+            $quiz->save();
 
             return $quiz;
         });
+    }
+
+    /**
+     * Everything that decides a mark, in an order-free form.
+     *
+     * @param list<Question> $questions
+     */
+    private function marking(Quiz $quiz, array $questions): string
+    {
+        $key = array_map(function (Question $q) {
+            // True/false options have no text; their id is what they say.
+            $options = array_map(fn ($o) => [$q->type === 'boolean' ? (string) $o['id'] : mb_strtolower(trim((string) ($o['text'] ?? ''))), (bool) ($o['correct'] ?? false)], $q->options ?: []);
+            sort($options);
+
+            return [$q->type, $q->points, $options];
+        }, $questions);
+        sort($key);
+
+        return json_encode([$quiz->pass_mark, $quiz->partial_credit, $quiz->question_pick, $quiz->max_attempts, $quiz->reveal, $key]) ?: '';
     }
 
     /**
@@ -254,7 +311,9 @@ class Saver
         // http(s) only, no whitespace or control characters anywhere: the
         // value lands in an <img src>, and a scheme check on a value with a
         // control character in it is a check that can be walked around.
-        if (mb_strlen($url) > 500 || preg_match('/[\x00-\x20\x7f]/', $url) || ! preg_match('#^https?://[^/]#i', $url)) {
+        // A path on this forum (fof/upload's own files) is fine too: one
+        // leading slash, not two, nor a backslash.
+        if (mb_strlen($url) > 500 || preg_match('/[\x00-\x20\x7f]/', $url) || ! preg_match('#^(https?://[^/]|/[^/\\\\])#i', $url)) {
             $this->fail('questions', 'image_url', $n);
         }
 

@@ -11,7 +11,8 @@ ernestdefoe-gauntlet:
     option_count: Question {number} needs {min} to {max} answers.
     accepted_count: Question {number} needs {min} to {max} accepted answers.
     no_correct: Mark at least one correct answer in question {number}.
-    image_url: The image for question {number} has to be a web address starting with http:// or https://.
+    image_url: The image for question {number} has to be a web address starting with http:// or https://, or a path on this forum.
+    reward_locked: This quiz carries points or a badge, so its answers, points and pass mark can only be changed by staff who may attach rewards. You can still edit its wording.
     no_attempts_left: You have used all your attempts at this quiz.
     no_questions: This quiz has no questions yet.
     slow_down: That is a lot in a short time. Give it a few minutes and try again.
@@ -169,6 +170,7 @@ ernestdefoe-gauntlet:
         boolean: True or false
         text: Typed answer
       drag: "Drag to move question {number}"
+      sortable: movable
       duplicate: Duplicate
       remove: Remove
       remove_confirm: "Remove question {number}?"

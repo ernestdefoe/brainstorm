@@ -26,6 +26,9 @@ class QuizDocument
     public function __invoke(Document $document, Request $request): Document
     {
         $id = (int) Arr::get($request->getQueryParams(), 'id');
+        if ($id < 1 || $id > 2147483647) {
+            return $document;
+        }
         $quiz = Quiz::query()->visibleTo(RequestUtil::getActor($request))->find($id);
 
         if (! $quiz) {

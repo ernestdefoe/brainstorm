@@ -13,7 +13,9 @@ export default class Sortable<T> {
 
   constructor(
     private items: () => T[],
-    private onEnd: () => void
+    private onEnd: () => void,
+    /** What a screen reader calls a row that can be moved, in the reader's language. */
+    private roleDescription: string
   ) {}
 
   handle(index: number): Record<string, unknown> {
@@ -21,7 +23,7 @@ export default class Sortable<T> {
       'data-sort-handle': index,
       tabindex: 0,
       role: 'button',
-      'aria-roledescription': 'sortable',
+      'aria-roledescription': this.roleDescription,
       onpointerdown: (e: PointerEvent) => this.start(e, index),
       onkeydown: (e: KeyboardEvent) => {
         const step = ({ ArrowUp: -1, ArrowDown: 1 } as Record<string, number>)[e.key];

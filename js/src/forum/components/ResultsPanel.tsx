@@ -32,13 +32,19 @@ export default class ResultsPanel extends Component<{ quiz: Quiz }> {
 
   load(offset: number) {
     this.loading = true;
-    results(this.attrs.quiz.id, offset).then(({ data, meta }) => {
-      this.rows = offset ? [...this.rows, ...data] : data;
-      if (meta.questions) this.stats = meta.questions;
-      this.next = meta.next;
-      this.loading = false;
-      m.redraw();
-    });
+    results(this.attrs.quiz.id, offset).then(
+      ({ data, meta }) => {
+        this.rows = offset ? [...this.rows, ...data] : data;
+        if (meta.questions) this.stats = meta.questions;
+        this.next = meta.next;
+        this.loading = false;
+        m.redraw();
+      },
+      () => {
+        this.loading = false;
+        m.redraw();
+      }
+    );
   }
 
   reset(user: Person) {

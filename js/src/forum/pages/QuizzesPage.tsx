@@ -25,6 +25,7 @@ export default class QuizzesPage extends Page {
   tab: Tab = 'new';
   query = '';
   searchTimer = 0;
+  asked = 0;
 
   oninit(vnode: Mithril.Vnode) {
     super.oninit(vnode);
@@ -41,8 +42,11 @@ export default class QuizzesPage extends Page {
     if (this.query.trim()) (params.filter as any).q = this.query.trim();
     if (more && this.next) params.page = { offset: this.next };
 
+    const ask = ++this.asked;
     listQuizzes(params).then(
       ({ data, meta }) => {
+        // An older search answering late doesn't overwrite a newer one.
+        if (ask !== this.asked) return;
         this.quizzes = more ? [...this.quizzes, ...data] : data;
         this.next = meta.next;
         this.canCreate = meta.canCreate;

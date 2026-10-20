@@ -12,9 +12,12 @@ use Psr\Http\Message\ServerRequestInterface;
 /** The two lookups every controller starts with. */
 trait Concerns
 {
+    /** The id in the route, or 0 (not found) for one too big for an id column. */
     protected function routeId(ServerRequestInterface $request, string $name = 'id'): int
     {
-        return (int) Arr::get($request->getAttributes(), 'routeParameters.'.$name);
+        $id = (string) Arr::get($request->getAttributes(), 'routeParameters.'.$name);
+
+        return strlen($id) <= 10 && (int) $id <= 2147483647 ? (int) $id : 0;
     }
 
     /** A quiz the actor may see, or a 404 — the same answer whether it is missing or hidden. */

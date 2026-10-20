@@ -95,7 +95,9 @@ export default class QuizPage extends Page {
                   recordFinish(quiz, result);
                   this.boardKey++;
                 }}
-                onclose={() => (this.playing = false)}
+                onclose={() => {
+                  this.playing = false;
+                }}
               />
             </div>
           ) : (

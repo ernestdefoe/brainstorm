@@ -57,7 +57,7 @@ export default class ResultView extends Component<Attrs> {
         </div>
 
         {r.review ? <ol className="GauntletReview">{r.review.map((q, i) => this.question(q, i))}</ol> : null}
-        {r.review && !r.answersShown ? <p className="GauntletResult-note">{t('key_hidden')}</p> : null}
+        {r.review && r.answersLater ? <p className="GauntletResult-note">{t('key_hidden')}</p> : null}
       </div>
     );
   }

@@ -26,6 +26,8 @@ export default class QuizPickerModal extends Modal<Attrs> {
   loading = true;
   query = '';
   timer = 0;
+  /** Only the newest search's answer is shown. */
+  asked = 0;
 
   className() {
     return 'GauntletPicker Modal--small';
@@ -45,11 +47,19 @@ export default class QuizPickerModal extends Modal<Attrs> {
     const filter: Record<string, string> = {};
     if (this.query.trim()) filter.q = this.query.trim();
 
-    listQuizzes({ filter }).then(({ data }) => {
-      this.quizzes = data;
-      this.loading = false;
-      m.redraw();
-    });
+    const ask = ++this.asked;
+    listQuizzes({ filter }).then(
+      ({ data }) => {
+        if (ask !== this.asked) return;
+        this.quizzes = data;
+        this.loading = false;
+        m.redraw();
+      },
+      () => {
+        this.loading = false;
+        m.redraw();
+      }
+    );
   }
 
   content(): Mithril.Children {
