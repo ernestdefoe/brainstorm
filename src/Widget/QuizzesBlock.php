@@ -1,13 +1,13 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet\Widget;
+namespace ErnestDefoe\Brainstorm\Widget;
 
 use Ernestdefoe\PageBuilder\Block\BlockInterface;
 use Flarum\User\User;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * Gauntlet's widget as a Page Builder block: the top quiz takers, or the
+ * Brainstorm's widget as a Page Builder block: the top quiz takers, or the
  * newest quizzes.
  *
  * The block resolves nothing on the server: its browser half asks the same
@@ -24,12 +24,12 @@ class QuizzesBlock implements BlockInterface
 
     private function t(string $key): string
     {
-        return $this->translator->trans('ernestdefoe-gauntlet.forum.widget.'.$key);
+        return $this->translator->trans('ernestdefoe-brainstorm.forum.widget.'.$key);
     }
 
     public function type(): string
     {
-        return 'gauntlet-quizzes';
+        return 'brainstorm-quizzes';
     }
 
     public function name(): string

@@ -1,6 +1,6 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet;
+namespace ErnestDefoe\Brainstorm;
 
 use Carbon\Carbon;
 use Flarum\Database\AbstractModel;
@@ -103,20 +103,20 @@ class Quiz extends AbstractModel
      */
     public function scopeVisibleTo(Builder $query, User $actor): void
     {
-        if (! $actor->hasPermission('gauntlet.view')) {
+        if (! $actor->hasPermission('brainstorm.view')) {
             $query->whereRaw('1 = 0');
 
             return;
         }
 
-        if ($actor->hasPermission('gauntlet.manage')) {
+        if ($actor->hasPermission('brainstorm.manage')) {
             return;
         }
 
         $query->where(function (Builder $q) use ($actor) {
             $q->where('status', 'published');
 
-            if (! $actor->isGuest() && $actor->hasPermission('gauntlet.create')) {
+            if (! $actor->isGuest() && $actor->hasPermission('brainstorm.create')) {
                 $q->orWhere('user_id', $actor->id);
             }
         });

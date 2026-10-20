@@ -1,9 +1,9 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet\Content;
+namespace ErnestDefoe\Brainstorm\Content;
 
-use ErnestDefoe\Gauntlet\Quiz;
-use ErnestDefoe\Gauntlet\RichText;
+use ErnestDefoe\Brainstorm\Quiz;
+use ErnestDefoe\Brainstorm\RichText;
 use Flarum\Frontend\Document;
 use Flarum\Http\RequestUtil;
 use Flarum\Http\UrlGenerator;
@@ -36,7 +36,7 @@ class QuizDocument
         }
 
         $description = Str::limit(trim((string) preg_replace('/\s+/', ' ', strip_tags((string) $this->rich->html($quiz->description, $quiz)))), 200);
-        $url = $this->url->to('forum')->route('gauntlet.quiz', ['id' => $quiz->id.'-'.$quiz->slug]);
+        $url = $this->url->to('forum')->route('brainstorm.quiz', ['id' => $quiz->id.'-'.$quiz->slug]);
 
         $document->title = $quiz->title;
         $document->canonicalUrl = $url;

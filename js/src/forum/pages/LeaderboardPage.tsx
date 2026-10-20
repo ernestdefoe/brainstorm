@@ -7,7 +7,7 @@ import extractText from 'flarum/common/utils/extractText';
 import type Mithril from 'mithril';
 import Leaderboard from '../components/Leaderboard';
 
-const t = (key: string) => app.translator.trans(`ernestdefoe-gauntlet.forum.leaderboard.${key}`);
+const t = (key: string) => app.translator.trans(`ernestdefoe-brainstorm.forum.leaderboard.${key}`);
 
 /** /quizzes/leaderboard — quizzes passed, across every quiz. */
 export default class LeaderboardPage extends Page {
@@ -18,10 +18,10 @@ export default class LeaderboardPage extends Page {
 
   view(): Mithril.Children {
     return (
-      <PageStructure className="GauntletLeaderboardPage" sidebar={() => <IndexSidebar />}>
-        <div className="GauntletIndexPage-head">
-          <h2 className="GauntletIndexPage-title">{t('overall')}</h2>
-          <LinkButton className="Button" icon="fas fa-arrow-left" href={app.route('gauntlet.index')}>
+      <PageStructure className="BrainstormLeaderboardPage" sidebar={() => <IndexSidebar />}>
+        <div className="BrainstormIndexPage-head">
+          <h2 className="BrainstormIndexPage-title">{t('overall')}</h2>
+          <LinkButton className="Button" icon="fas fa-arrow-left" href={app.route('brainstorm.index')}>
             {t('back')}
           </LinkButton>
         </div>

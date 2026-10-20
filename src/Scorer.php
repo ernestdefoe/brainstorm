@@ -1,6 +1,6 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet;
+namespace ErnestDefoe\Brainstorm;
 
 /**
  * Marks one answer. Pure: no queries, no state, so every path that scores —

@@ -1,4 +1,4 @@
-ernestdefoe-gauntlet:
+ernestdefoe-brainstorm:
   # Messages the server sends back.
   api:
     title: Give the quiz a title of up to 200 characters.
@@ -253,19 +253,19 @@ ernestdefoe-gauntlet:
     settings:
       show_nav: Show "Quizzes" in the sidebar navigation
     badges:
-      quizzes_passed: Quizzes passed (Gauntlet)
-      perfect_scores: Quizzes finished with 100% (Gauntlet)
+      quizzes_passed: Quizzes passed (Brainstorm)
+      perfect_scores: Quizzes finished with 100% (Brainstorm)
 
-# Gauntlet's step for Onramp, the onboarding checklist.
+# Brainstorm's step for Onramp, the onboarding checklist.
 ernestdefoe-onramp:
   lib:
     types:
-      gauntlet:
+      brainstorm:
         passed:
           title: "{count, plural, one {Pass a quiz} other {Pass # quizzes}}"
           description: Test what you know in one of the forum's quizzes.
           button: Find a quiz
   admin:
     types:
-      gauntlet:
-        passed: Pass quizzes (Gauntlet)
+      brainstorm:
+        passed: Pass quizzes (Brainstorm)

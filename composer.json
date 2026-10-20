@@ -1,6 +1,6 @@
 {
-    "name": "ernestdefoe/gauntlet",
-    "description": "Gauntlet — quizzes and knowledge tests for Flarum. Single and multiple choice, true/false, typed answers and image questions; timers, pass marks and attempt limits enforced on the server; leaderboards that respect privacy; quizzes playable inside a post; rewards with FoF Badges and FoF Gamification.",
+    "name": "ernestdefoe/brainstorm",
+    "description": "Brainstorm — quizzes and knowledge tests for Flarum. Single and multiple choice, true/false, typed answers and image questions; timers, pass marks and attempt limits enforced on the server; leaderboards that respect privacy; quizzes playable inside a post; rewards with FoF Badges and FoF Gamification.",
     "keywords": [
         "flarum",
         "flarum-extension",
@@ -19,10 +19,10 @@
             "email": "ernestdefoe@gmail.com"
         }
     ],
-    "homepage": "https://github.com/ernestdefoe/gauntlet",
+    "homepage": "https://github.com/ernestdefoe/brainstorm",
     "support": {
-        "issues": "https://github.com/ernestdefoe/gauntlet/issues",
-        "source": "https://github.com/ernestdefoe/gauntlet"
+        "issues": "https://github.com/ernestdefoe/brainstorm/issues",
+        "source": "https://github.com/ernestdefoe/brainstorm"
     },
     "funding": [
         {
@@ -36,17 +36,17 @@
     },
     "autoload": {
         "psr-4": {
-            "ErnestDefoe\\Gauntlet\\": "src/"
+            "ErnestDefoe\\Brainstorm\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "ErnestDefoe\\Gauntlet\\Tests\\": "tests/"
+            "ErnestDefoe\\Brainstorm\\Tests\\": "tests/"
         }
     },
     "extra": {
         "flarum-extension": {
-            "title": "Gauntlet",
+            "title": "Brainstorm",
             "category": "feature",
             "icon": {
                 "name": "fas fa-graduation-cap",

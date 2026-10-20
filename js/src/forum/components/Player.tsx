@@ -10,7 +10,7 @@ import type { Answer, Paper, PaperQuestion, Quiz, Result } from '../../common/ap
 import { clock } from '../../common/format';
 import ResultView from './ResultView';
 
-const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-gauntlet.forum.player.${key}`, params);
+const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-brainstorm.forum.player.${key}`, params);
 const text = (key: string, params: Record<string, unknown> = {}) => extractText(t(key, params));
 
 /** Answers wait this long after the last change before they are saved. */
@@ -198,7 +198,7 @@ export default class Player extends Component<Attrs> {
   view(): Mithril.Children {
     if (this.phase === 'loading' || this.phase === 'submitting') {
       return (
-        <div className="GauntletPlayer GauntletPlayer--loading">
+        <div className="BrainstormPlayer BrainstormPlayer--loading">
           <LoadingIndicator display="block" />
         </div>
       );
@@ -206,7 +206,7 @@ export default class Player extends Component<Attrs> {
 
     if (this.phase === 'error') {
       return (
-        <div className="GauntletPlayer GauntletPlayer--error">
+        <div className="BrainstormPlayer BrainstormPlayer--error">
           <p>{this.error || t('error')}</p>
           {this.attrs.onclose ? (
             <Button className="Button" onclick={() => this.attrs.onclose!()}>
@@ -219,7 +219,7 @@ export default class Player extends Component<Attrs> {
 
     if (this.phase === 'result') {
       return (
-        <div className="GauntletPlayer">
+        <div className="BrainstormPlayer">
           <ResultView result={this.result!} quiz={this.attrs.quiz} onretry={() => this.begin()} onclose={this.attrs.onclose} />
         </div>
       );
@@ -230,15 +230,15 @@ export default class Player extends Component<Attrs> {
     const done = paper.questions.filter((q) => this.answered(q)).length;
 
     return (
-      <div className="GauntletPlayer" aria-live="off">
-        <div className="GauntletPlayer-bar">
-          <span className="GauntletPlayer-count">
+      <div className="BrainstormPlayer" aria-live="off">
+        <div className="BrainstormPlayer-bar">
+          <span className="BrainstormPlayer-count">
             {this.phase === 'review' ? t('review_heading') : t('question_of', { number: this.index + 1, total })}
           </span>
-          {paper.practice ? <span className="GauntletChip">{t('practice')}</span> : null}
+          {paper.practice ? <span className="BrainstormChip">{t('practice')}</span> : null}
           {this.timer()}
           <div
-            className="GauntletPlayer-progress"
+            className="BrainstormPlayer-progress"
             role="progressbar"
             aria-valuemin={0}
             aria-valuemax={total}
@@ -263,7 +263,7 @@ export default class Player extends Component<Attrs> {
     const low = left <= Math.max(10, Math.min(60, (this.attrs.quiz.timeLimit || 0) * 0.1));
 
     return (
-      <span className={'GauntletPlayer-timer' + (low ? ' is-low' : '')} role="timer" aria-label={text('time_left')}>
+      <span className={'BrainstormPlayer-timer' + (low ? ' is-low' : '')} role="timer" aria-label={text('time_left')}>
         <Icon name="far fa-clock" />
         {clock(left)}
       </span>
@@ -272,14 +272,14 @@ export default class Player extends Component<Attrs> {
 
   question(q: PaperQuestion): Mithril.Children {
     const last = this.index === this.paper!.questions.length - 1;
-    const name = `gauntlet-q${this.paper!.id}-${q.id}`;
+    const name = `brainstorm-q${this.paper!.id}-${q.id}`;
     const value = this.answers[q.id];
 
     let input: Mithril.Children;
     if (q.type === 'text') {
       input = (
         <input
-          className="FormControl GauntletPlayer-text"
+          className="FormControl BrainstormPlayer-text"
           type="text"
           maxlength={300}
           autocomplete="off"
@@ -298,13 +298,13 @@ export default class Player extends Component<Attrs> {
       const chosen: string[] = Array.isArray(value) ? value : value ? [value] : [];
 
       input = (
-        <div className="GauntletOptions" role="group" aria-labelledby={name}>
-          {multiple ? <p className="GauntletOptions-hint">{t('choose_all')}</p> : null}
+        <div className="BrainstormOptions" role="group" aria-labelledby={name}>
+          {multiple ? <p className="BrainstormOptions-hint">{t('choose_all')}</p> : null}
           {q.options.map((o) => {
             const on = chosen.includes(o.id);
 
             return (
-              <label className={'GauntletOption' + (on ? ' is-chosen' : '')} key={o.id}>
+              <label className={'BrainstormOption' + (on ? ' is-chosen' : '')} key={o.id}>
                 <input
                   type={multiple ? 'checkbox' : 'radio'}
                   name={name}
@@ -312,8 +312,8 @@ export default class Player extends Component<Attrs> {
                   checked={on}
                   onchange={() => this.set(q, multiple ? (on ? chosen.filter((id) => id !== o.id) : [...chosen, o.id]) : o.id)}
                 />
-                <span className="GauntletOption-mark" aria-hidden="true" />
-                <span className="GauntletOption-text">{q.type === 'boolean' ? t(o.id === 'true' ? 'true' : 'false') : o.text}</span>
+                <span className="BrainstormOption-mark" aria-hidden="true" />
+                <span className="BrainstormOption-text">{q.type === 'boolean' ? t(o.id === 'true' ? 'true' : 'false') : o.text}</span>
               </label>
             );
           })}
@@ -322,16 +322,16 @@ export default class Player extends Component<Attrs> {
     }
 
     return (
-      <div className="GauntletQuestion" key={q.id}>
-        <div className="GauntletQuestion-body Post-body" id={name}>
+      <div className="BrainstormQuestion" key={q.id}>
+        <div className="BrainstormQuestion-body Post-body" id={name}>
           {q.bodyHtml ? m.trust(q.bodyHtml) : null}
         </div>
         {q.imageUrl ? (
-          <img className="GauntletQuestion-image" src={q.imageUrl} alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+          <img className="BrainstormQuestion-image" src={q.imageUrl} alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
         ) : null}
-        {q.points !== 1 ? <p className="GauntletQuestion-points">{t('points', { count: q.points })}</p> : null}
+        {q.points !== 1 ? <p className="BrainstormQuestion-points">{t('points', { count: q.points })}</p> : null}
         {input}
-        <div className="GauntletPlayer-nav">
+        <div className="BrainstormPlayer-nav">
           <Button className="Button" icon="fas fa-arrow-left" disabled={this.index === 0} onclick={() => this.go(this.index - 1)}>
             {t('previous')}
           </Button>
@@ -353,9 +353,9 @@ export default class Player extends Component<Attrs> {
     const missing = total - done;
 
     return (
-      <div className="GauntletPlayer-review">
+      <div className="BrainstormPlayer-review">
         <p>{missing ? t('unanswered', { count: missing }) : t('all_answered')}</p>
-        <div className="GauntletPlayer-nav">
+        <div className="BrainstormPlayer-nav">
           <Button className="Button" icon="fas fa-arrow-left" onclick={() => (this.phase = 'playing')}>
             {t('back')}
           </Button>
@@ -372,11 +372,13 @@ export default class Player extends Component<Attrs> {
     if (questions.length < 2) return null;
 
     return (
-      <nav className="GauntletDots" aria-label={text('jump')}>
+      <nav className="BrainstormDots" aria-label={text('jump')}>
         {questions.map((q, i) => (
           <button
             type="button"
-            className={'GauntletDot' + (this.answered(q) ? ' is-answered' : '') + (i === this.index && this.phase === 'playing' ? ' is-current' : '')}
+            className={
+              'BrainstormDot' + (this.answered(q) ? ' is-answered' : '') + (i === this.index && this.phase === 'playing' ? ' is-current' : '')
+            }
             aria-current={i === this.index && this.phase === 'playing' ? 'step' : undefined}
             aria-label={text('question_of', { number: i + 1, total: questions.length })}
             onclick={() => {

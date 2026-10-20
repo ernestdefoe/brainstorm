@@ -3,7 +3,7 @@ import Component from 'flarum/common/Component';
 import type Mithril from 'mithril';
 
 /**
- * Gauntlet's widget — the top quiz takers or the newest quizzes — offered to
+ * Brainstorm's widget — the top quiz takers or the newest quizzes — offered to
  * every widget host there is: Bespoke, FoF Forum Widgets and Page Builder.
  *
  * 🚨 No host is a build-time dependency: each is found at runtime through its
@@ -31,7 +31,7 @@ class QuizzesWidget extends Component<{ show?: Show; limit?: number }> {
     if (!app.forum.attribute('canViewQuizzes')) return null;
     const limit = Math.max(1, Math.min(25, Number(this.attrs.limit) || 5));
 
-    return body ? m(body, { show: this.attrs.show === 'latest' ? 'latest' : 'leaderboard', limit }) : <div className="GauntletWidget" />;
+    return body ? m(body, { show: this.attrs.show === 'latest' ? 'latest' : 'leaderboard', limit }) : <div className="BrainstormWidget" />;
   }
 }
 
@@ -52,13 +52,13 @@ export default function registerWidgets(): void {
     if (Widgets && WidgetBase) {
       class FofQuizzesWidget extends WidgetBase {
         className() {
-          return 'GauntletFofWidget';
+          return 'BrainstormFofWidget';
         }
         icon() {
           return 'fas fa-graduation-cap';
         }
         title() {
-          return app.translator.trans('ernestdefoe-gauntlet.forum.widget.title');
+          return app.translator.trans('ernestdefoe-brainstorm.forum.widget.title');
         }
         content() {
           return <QuizzesWidget />;
@@ -66,8 +66,8 @@ export default function registerWidgets(): void {
       }
 
       new Widgets()
-        .add({ key: 'gauntletQuizzes', component: FofQuizzesWidget, isDisabled: false, isUnique: true, placement: 'end', position: 1 })
-        .extend(app, 'ernestdefoe-gauntlet');
+        .add({ key: 'brainstormQuizzes', component: FofQuizzesWidget, isDisabled: false, isUnique: true, placement: 'end', position: 1 })
+        .extend(app, 'ernestdefoe-brainstorm');
     }
   }
 
@@ -76,30 +76,30 @@ export default function registerWidgets(): void {
     g.BespokeWidgetQueue = g.BespokeWidgetQueue || [];
     // Labels are translation KEYS: Bespoke resolves them itself, in the reader's locale.
     g.BespokeWidgetQueue.push({
-      type: 'gauntlet-quizzes',
-      label: 'ernestdefoe-gauntlet.forum.widget.name',
+      type: 'brainstorm-quizzes',
+      label: 'ernestdefoe-brainstorm.forum.widget.name',
       icon: 'fas fa-graduation-cap',
       zones: ['sidebar', 'above-list', 'below-list', 'footer'],
       schema: [
-        { key: 'heading', type: 'text', label: 'ernestdefoe-gauntlet.forum.widget.heading', default: '' },
+        { key: 'heading', type: 'text', label: 'ernestdefoe-brainstorm.forum.widget.heading', default: '' },
         {
           key: 'show',
           type: 'select',
-          label: 'ernestdefoe-gauntlet.forum.widget.show',
+          label: 'ernestdefoe-brainstorm.forum.widget.show',
           default: 'leaderboard',
           options: [
-            { value: 'leaderboard', label: 'ernestdefoe-gauntlet.forum.widget.show_leaderboard' },
-            { value: 'latest', label: 'ernestdefoe-gauntlet.forum.widget.show_latest' },
+            { value: 'leaderboard', label: 'ernestdefoe-brainstorm.forum.widget.show_leaderboard' },
+            { value: 'latest', label: 'ernestdefoe-brainstorm.forum.widget.show_latest' },
           ],
         },
-        { key: 'limit', type: 'number', label: 'ernestdefoe-gauntlet.forum.widget.limit', default: 5 },
+        { key: 'limit', type: 'number', label: 'ernestdefoe-brainstorm.forum.widget.limit', default: 5 },
       ],
       component: {
         view(vnode: any) {
           const s = vnode.attrs?.settings || {};
           return (
-            <div className="GauntletBespokeWidget">
-              <h4 className="GauntletWidget-heading">{s.heading || app.translator.trans('ernestdefoe-gauntlet.forum.widget.title')}</h4>
+            <div className="BrainstormBespokeWidget">
+              <h4 className="BrainstormWidget-heading">{s.heading || app.translator.trans('ernestdefoe-brainstorm.forum.widget.title')}</h4>
               <QuizzesWidget show={s.show} limit={s.limit} />
             </div>
           );
@@ -113,12 +113,12 @@ export default function registerWidgets(): void {
     g.PageBuilderBlockQueue = g.PageBuilderBlockQueue || [];
     // 🚨 The type matches QuizzesBlock::type() exactly.
     g.PageBuilderBlockQueue.push({
-      type: 'gauntlet-quizzes',
+      type: 'brainstorm-quizzes',
       component: {
         view(vnode: any) {
           const s = vnode.attrs?.block?.settings || {};
           return (
-            <div className="GauntletPageBuilderBlock">
+            <div className="BrainstormPageBuilderBlock">
               <QuizzesWidget show={s.show} limit={s.limit} />
             </div>
           );

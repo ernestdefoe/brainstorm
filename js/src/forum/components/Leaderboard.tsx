@@ -7,7 +7,7 @@ import type { Row, Standing } from '../../common/api';
 import { clock, percent } from '../../common/format';
 import personLink from './PersonLink';
 
-const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-gauntlet.forum.leaderboard.${key}`, params);
+const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-brainstorm.forum.leaderboard.${key}`, params);
 
 interface Attrs {
   /** One quiz's board; without it, the board across every quiz. */
@@ -54,27 +54,29 @@ export default class Leaderboard extends Component<Attrs> {
     const myId = app.session.user?.id();
 
     return (
-      <div className={'GauntletBoard' + (this.attrs.compact ? ' GauntletBoard--compact' : '')}>
+      <div className={'BrainstormBoard' + (this.attrs.compact ? ' BrainstormBoard--compact' : '')}>
         {this.rows.length ? (
-          <ol className="GauntletBoard-list">
+          <ol className="BrainstormBoard-list">
             {this.rows.map((row) => (
               <li
-                className={'GauntletBoard-row' + (String(row.user.id) === myId ? ' is-me' : '') + (row.rank <= 3 ? ' is-top is-top-' + row.rank : '')}
+                className={
+                  'BrainstormBoard-row' + (String(row.user.id) === myId ? ' is-me' : '') + (row.rank <= 3 ? ' is-top is-top-' + row.rank : '')
+                }
               >
-                <span className="GauntletBoard-rank">{row.rank}</span>
+                <span className="BrainstormBoard-rank">{row.rank}</span>
                 {personLink(row.user)}
-                <span className="GauntletBoard-value">{perQuiz ? percent(row.percent!) : t('passed', { count: row.passed })}</span>
+                <span className="BrainstormBoard-value">{perQuiz ? percent(row.percent!) : t('passed', { count: row.passed })}</span>
                 {this.attrs.compact ? null : (
-                  <span className="GauntletBoard-extra">{perQuiz ? clock(row.duration!) : t('average', { score: percent(row.average!) })}</span>
+                  <span className="BrainstormBoard-extra">{perQuiz ? clock(row.duration!) : t('average', { score: percent(row.average!) })}</span>
                 )}
               </li>
             ))}
           </ol>
         ) : (
-          <p className="GauntletBoard-empty">{t('empty')}</p>
+          <p className="BrainstormBoard-empty">{t('empty')}</p>
         )}
         {this.me && !this.rows.some((row) => String(row.user.id) === myId) ? (
-          <p className="GauntletBoard-me">
+          <p className="BrainstormBoard-me">
             {t(perQuiz ? 'you_quiz' : 'you_overall', {
               rank: this.me.rank,
               score: perQuiz ? percent(this.me.percent!) : '',

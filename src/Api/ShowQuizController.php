@@ -1,10 +1,10 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet\Api;
+namespace ErnestDefoe\Brainstorm\Api;
 
-use ErnestDefoe\Gauntlet\Access;
-use ErnestDefoe\Gauntlet\Attempts;
-use ErnestDefoe\Gauntlet\Presenter;
+use ErnestDefoe\Brainstorm\Access;
+use ErnestDefoe\Brainstorm\Attempts;
+use ErnestDefoe\Brainstorm\Presenter;
 use Flarum\Http\RequestUtil;
 use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ResponseInterface;

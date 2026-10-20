@@ -196,5 +196,5 @@ export const resetMember = (quizId: number, userId: number) => call<void>('DELET
 
 /** "/quizzes/12-capitals" */
 export function quizUrl(quiz: { id: number; slug: string }): string {
-  return app.route('gauntlet.quiz', { id: quiz.id + (quiz.slug ? '-' + quiz.slug : '') });
+  return app.route('brainstorm.quiz', { id: quiz.id + (quiz.slug ? '-' + quiz.slug : '') });
 }

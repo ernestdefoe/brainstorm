@@ -1,9 +1,9 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet\Listener;
+namespace ErnestDefoe\Brainstorm\Listener;
 
-use ErnestDefoe\Gauntlet\Event\AttemptFinished;
-use ErnestDefoe\Gauntlet\Rewards;
+use ErnestDefoe\Brainstorm\Event\AttemptFinished;
+use ErnestDefoe\Brainstorm\Rewards;
 
 /** A first pass pays the quiz's reward. */
 class PayRewards

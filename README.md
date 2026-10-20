@@ -1,4 +1,4 @@
-# Gauntlet — quizzes for Flarum
+# Brainstorm — quizzes for Flarum
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg) ![Flarum 2](https://img.shields.io/badge/flarum-2.x-orange.svg)
 
@@ -23,15 +23,15 @@ Quizzes and knowledge tests for your community. Write a quiz once, play it on it
 ## Installation
 
 ```sh
-composer require ernestdefoe/gauntlet
+composer require ernestdefoe/brainstorm
 ```
 
-Then enable **Gauntlet** in the admin panel.
+Then enable **Brainstorm** in the admin panel.
 
 ## Updating
 
 ```sh
-composer update ernestdefoe/gauntlet
+composer update ernestdefoe/brainstorm
 php flarum migrate
 php flarum cache:clear
 ```
@@ -54,6 +54,6 @@ FoF Gamification recounts a member's points from their votes, so points granted 
 
 ## Links
 
-- [Source code on GitHub](https://github.com/ernestdefoe/gauntlet)
-- [Report an issue](https://github.com/ernestdefoe/gauntlet/issues)
+- [Source code on GitHub](https://github.com/ernestdefoe/brainstorm)
+- [Report an issue](https://github.com/ernestdefoe/brainstorm/issues)
 - ☕ [Buy me a coffee](https://buymeacoffee.com/ernestdefoe)

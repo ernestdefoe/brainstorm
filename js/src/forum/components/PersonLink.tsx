@@ -3,7 +3,7 @@ import Link from 'flarum/common/components/Link';
 import stringToColor from 'flarum/common/utils/stringToColor';
 import type { Person } from '../../common/api';
 
-/** A member's avatar and name, linking to their profile, from Gauntlet's plain user objects. */
+/** A member's avatar and name, linking to their profile, from Brainstorm's plain user objects. */
 export default function personLink(person: Person, avatarOnly = false): any {
   const avatar = person.avatarUrl ? (
     <img className="Avatar" src={person.avatarUrl} alt="" loading="lazy" decoding="async" />
@@ -14,9 +14,9 @@ export default function personLink(person: Person, avatarOnly = false): any {
   );
 
   return (
-    <Link className="GauntletPerson" href={app.route('user', { username: person.slug })}>
+    <Link className="BrainstormPerson" href={app.route('user', { username: person.slug })}>
       {avatar}
-      {avatarOnly ? null : <span className="GauntletPerson-name">{person.displayName}</span>}
+      {avatarOnly ? null : <span className="BrainstormPerson-name">{person.displayName}</span>}
     </Link>
   );
 }

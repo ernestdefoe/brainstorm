@@ -1,6 +1,6 @@
 const config = require('flarum-webpack-config');
 
-const NS = 'ernestdefoe-gauntlet';
+const NS = 'ernestdefoe-brainstorm';
 
 /*
  * 🚨 Lazy chunks need ids no other extension can have.
@@ -32,7 +32,7 @@ module.exports = (...args) => {
   if (typeof base === 'function') base = base(...args);
 
   base.optimization = { ...base.optimization, chunkIds: false };
-  base.output = { ...base.output, chunkLoadingGlobal: 'webpackChunk_ernestdefoe_gauntlet' };
+  base.output = { ...base.output, chunkLoadingGlobal: 'webpackChunk_ernestdefoe_brainstorm' };
   base.plugins = [...(base.plugins || []), new NamespacedChunkIds()];
 
   return base;

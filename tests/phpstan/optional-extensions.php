@@ -1,6 +1,6 @@
 <?php
 
-// The parts of ernestdefoe/onramp and ernestdefoe/page-builder that Gauntlet uses, for PHPStan only.
+// The parts of ernestdefoe/onramp and ernestdefoe/page-builder that Brainstorm uses, for PHPStan only.
 
 namespace ErnestDefoe\Onramp\StepType {
     use Flarum\User\User;

@@ -1,9 +1,9 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet;
+namespace ErnestDefoe\Brainstorm;
 
 use Carbon\Carbon;
-use ErnestDefoe\Gauntlet\Event\AttemptFinished;
+use ErnestDefoe\Brainstorm\Event\AttemptFinished;
 use Flarum\Foundation\ValidationException;
 use Flarum\User\User;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -63,13 +63,13 @@ class Attempts
             }
 
             if (! $practice && $quiz->max_attempts && $this->used($quiz, $user) >= $quiz->max_attempts) {
-                throw new ValidationException(['attempt' => $this->translator->trans('ernestdefoe-gauntlet.api.no_attempts_left')]);
+                throw new ValidationException(['attempt' => $this->translator->trans('ernestdefoe-brainstorm.api.no_attempts_left')]);
             }
 
             $layout = Dealer::deal($quiz, $quiz->questions()->get());
 
             if (! $layout) {
-                throw new ValidationException(['attempt' => $this->translator->trans('ernestdefoe-gauntlet.api.no_questions')]);
+                throw new ValidationException(['attempt' => $this->translator->trans('ernestdefoe-brainstorm.api.no_questions')]);
             }
 
             $now = Carbon::now();
@@ -223,7 +223,7 @@ class Attempts
             try {
                 $this->submit($attempt);
             } catch (\Throwable $e) {
-                $this->log->error('[gauntlet] could not mark overdue attempt '.$attempt->id.': '.$e->getMessage());
+                $this->log->error('[brainstorm] could not mark overdue attempt '.$attempt->id.': '.$e->getMessage());
             }
         }
     }

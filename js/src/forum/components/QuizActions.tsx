@@ -6,15 +6,15 @@ import { quizUrl } from '../../common/api';
 import type { Quiz, Result } from '../../common/api';
 import { percent } from '../../common/format';
 
-const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-gauntlet.forum.card.${key}`, params);
+const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-brainstorm.forum.card.${key}`, params);
 
 /** "Best: 80%" with a tick once passed; empty before the first attempt. */
 export function quizStanding(quiz: Quiz): any {
   const best = quiz.me?.best;
-  if (!best) return <span className="GauntletCard-standing" />;
+  if (!best) return <span className="BrainstormCard-standing" />;
 
   return (
-    <span className={'GauntletCard-standing' + (best.passed ? ' is-passed' : '')}>
+    <span className={'BrainstormCard-standing' + (best.passed ? ' is-passed' : '')}>
       <Icon name={best.passed ? 'fas fa-circle-check' : 'far fa-circle'} />
       {t('best', { score: percent(best.percent) })}
     </span>
@@ -37,11 +37,11 @@ export function quizAction(quiz: Quiz, onplay?: () => void): any {
   }
 
   if (!quiz.canTake) {
-    return <span className="GauntletCard-note">{t(quiz.isOpen ? 'cannot_take' : 'closed')}</span>;
+    return <span className="BrainstormCard-note">{t(quiz.isOpen ? 'cannot_take' : 'closed')}</span>;
   }
 
   if (me && me.attemptsLeft === 0 && !me.openAttemptId && !quiz.canEdit) {
-    return <span className="GauntletCard-note">{t('no_attempts')}</span>;
+    return <span className="BrainstormCard-note">{t('no_attempts')}</span>;
   }
 
   const label = me?.openAttemptId ? 'resume' : me?.best ? 'again' : quiz.canEdit && quiz.status === 'draft' ? 'preview' : 'start';

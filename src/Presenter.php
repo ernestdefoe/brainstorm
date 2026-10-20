@@ -1,6 +1,6 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet;
+namespace ErnestDefoe\Brainstorm;
 
 use Carbon\Carbon;
 use Flarum\Http\SlugManager;
@@ -9,7 +9,7 @@ use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Collection;
 
 /**
- * Everything Gauntlet sends to a browser is built here, field by field.
+ * Everything Brainstorm sends to a browser is built here, field by field.
  *
  * 🚨 The answer key (`correct`, a typed question's accepted answers, the
  * explanation) appears in exactly two places: the editor's copy, for people

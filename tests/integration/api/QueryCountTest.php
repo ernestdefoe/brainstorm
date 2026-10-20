@@ -1,6 +1,6 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet\Tests\integration\api;
+namespace ErnestDefoe\Brainstorm\Tests\integration\api;
 
 use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
@@ -16,7 +16,7 @@ class QueryCountTest extends TestCase
     {
         parent::setUp();
 
-        $this->extension('flarum-mentions', 'ernestdefoe-gauntlet');
+        $this->extension('flarum-mentions', 'ernestdefoe-brainstorm');
         $this->prepareDatabase([User::class => [$this->normalUser()]]);
     }
 
@@ -43,7 +43,8 @@ class QueryCountTest extends TestCase
         for ($i = 0; $i < 5; $i++) {
             $response = $this->send($this->request('POST', '/api/quizzes', ['authenticatedAs' => 1, 'json' => ['data' => [
                 'title' => "Quiz $i",
-                'description' => "Thanks @normal and @admin ($i)",
+                // The form the composer writes: display name and id.
+                'description' => "Thanks @\"normal\"#2 and @\"admin\"#1 ($i)",
                 'status' => 'published',
                 'questions' => [['type' => 'boolean', 'body' => 'Yes?', 'options' => [['id' => 'true', 'correct' => true]]]],
             ]]]));

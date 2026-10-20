@@ -12,7 +12,7 @@ import type { Quiz } from '../../common/api';
 import QuizCard from '../components/QuizCard';
 import Leaderboard from '../components/Leaderboard';
 
-const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-gauntlet.forum.${key}`, params);
+const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-brainstorm.forum.${key}`, params);
 
 type Tab = 'new' | 'popular' | 'mine';
 
@@ -67,18 +67,18 @@ export default class QuizzesPage extends Page {
 
   view(): Mithril.Children {
     return (
-      <PageStructure className="GauntletIndexPage" sidebar={() => <IndexSidebar />}>
-        <div className="GauntletIndexPage-head">
-          <h2 className="GauntletIndexPage-title">{t('index.title')}</h2>
+      <PageStructure className="BrainstormIndexPage" sidebar={() => <IndexSidebar />}>
+        <div className="BrainstormIndexPage-head">
+          <h2 className="BrainstormIndexPage-title">{t('index.title')}</h2>
           {this.canCreate ? (
-            <LinkButton className="Button Button--primary" icon="fas fa-plus" href={app.route('gauntlet.new')}>
+            <LinkButton className="Button Button--primary" icon="fas fa-plus" href={app.route('brainstorm.new')}>
               {t('index.new')}
             </LinkButton>
           ) : null}
         </div>
 
-        <div className="GauntletIndexPage-toolbar">
-          <div className="GauntletTabs" role="tablist">
+        <div className="BrainstormIndexPage-toolbar">
+          <div className="BrainstormTabs" role="tablist">
             {(['new', 'popular', ...(this.canCreate ? ['mine'] : [])] as Tab[]).map((tab) => (
               <Button
                 className={'Button Button--flat' + (this.tab === tab ? ' active' : '')}
@@ -91,7 +91,7 @@ export default class QuizzesPage extends Page {
             ))}
           </div>
           <input
-            className="FormControl GauntletIndexPage-search"
+            className="FormControl BrainstormIndexPage-search"
             type="search"
             placeholder={extractText(t('index.search'))}
             aria-label={extractText(t('index.search'))}
@@ -104,23 +104,23 @@ export default class QuizzesPage extends Page {
           />
         </div>
 
-        <div className="GauntletIndexPage-body">
-          <div className="GauntletIndexPage-list">
+        <div className="BrainstormIndexPage-body">
+          <div className="BrainstormIndexPage-list">
             {this.quizzes.map((quiz) => (
               <QuizCard key={quiz.id} quiz={quiz} />
             ))}
             {this.loading ? <LoadingIndicator display="block" /> : null}
-            {!this.loading && !this.quizzes.length ? <p className="GauntletEmpty">{t(this.query ? 'index.no_results' : 'index.empty')}</p> : null}
+            {!this.loading && !this.quizzes.length ? <p className="BrainstormEmpty">{t(this.query ? 'index.no_results' : 'index.empty')}</p> : null}
             {!this.loading && this.next ? (
-              <Button className="Button GauntletIndexPage-more" onclick={() => this.load(true)}>
+              <Button className="Button BrainstormIndexPage-more" onclick={() => this.load(true)}>
                 {t('index.more')}
               </Button>
             ) : null}
           </div>
-          <aside className="GauntletIndexPage-board">
+          <aside className="BrainstormIndexPage-board">
             <h3>{t('leaderboard.overall')}</h3>
             <Leaderboard limit={10} compact />
-            <LinkButton className="Button Button--link" href={app.route('gauntlet.leaderboard')}>
+            <LinkButton className="Button Button--link" href={app.route('brainstorm.leaderboard')}>
               {t('leaderboard.see_all')}
             </LinkButton>
           </aside>

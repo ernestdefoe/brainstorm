@@ -1,10 +1,10 @@
-// Gauntlet. Built on the forum's own colour variables, so it follows the
+// Brainstorm. Built on the forum's own colour variables, so it follows the
 // theme, its primary colour and dark mode without settings of its own.
 
 @g-gap: 12px;
 @g-radius: 10px;
 
-.GauntletChip {
+.BrainstormChip {
   display: inline-block;
   margin-left: 8px;
   padding: 2px 8px;
@@ -21,15 +21,15 @@
   }
 }
 
-.GauntletEmpty,
-.GauntletBoard-empty {
+.BrainstormEmpty,
+.BrainstormBoard-empty {
   color: var(--muted-color);
   text-align: center;
   padding: 24px 0;
 }
 
 // The facts line under a quiz's title.
-.GauntletFacts {
+.BrainstormFacts {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 14px;
@@ -42,11 +42,11 @@
     gap: 5px;
   }
 }
-.GauntletFacts-reward {
+.BrainstormFacts-reward {
   color: var(--text-color);
   font-weight: 600;
 }
-.GauntletBadgeIcon {
+.BrainstormBadgeIcon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -57,7 +57,7 @@
 }
 
 // A quiz: in the list, in a post, and on its own page.
-.GauntletCard {
+.BrainstormCard {
   border: 1px solid var(--control-bg);
   border-radius: @g-radius;
   background: var(--body-bg);
@@ -69,15 +69,15 @@
     max-width: 680px;
   }
 }
-.GauntletEmbed {
+.BrainstormEmbed {
   display: block;
 }
-.GauntletCard-header {
+.BrainstormCard-header {
   display: flex;
   gap: @g-gap;
   align-items: flex-start;
 }
-.GauntletCard-icon {
+.BrainstormCard-icon {
   flex: none;
   display: inline-flex;
   align-items: center;
@@ -89,11 +89,11 @@
   color: var(--body-bg);
   font-size: 18px;
 }
-.GauntletCard-heading {
+.BrainstormCard-heading {
   min-width: 0;
   flex: 1;
 }
-.GauntletCard-title {
+.BrainstormCard-title {
   margin: 0 0 4px;
   font-size: 16px;
   line-height: 1.3;
@@ -102,7 +102,7 @@
     color: var(--heading-color);
   }
 }
-.GauntletCard-description {
+.BrainstormCard-description {
   margin-top: @g-gap;
   font-size: 14px;
 
@@ -110,7 +110,7 @@
     margin-bottom: 0;
   }
 }
-.GauntletCard-footer {
+.BrainstormCard-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -118,7 +118,7 @@
   margin-top: 14px;
   flex-wrap: wrap;
 }
-.GauntletCard-standing {
+.BrainstormCard-standing {
   font-size: 13px;
   color: var(--muted-color);
   display: inline-flex;
@@ -130,13 +130,13 @@
     font-weight: 600;
   }
 }
-.GauntletCard-note {
+.BrainstormCard-note {
   font-size: 13px;
   color: var(--muted-color);
 }
 
 // Playing.
-.GauntletPlayer {
+.BrainstormPlayer {
   margin-top: 14px;
 
   &--error {
@@ -144,7 +144,7 @@
     color: var(--muted-color);
   }
 }
-.GauntletPlayer-bar {
+.BrainstormPlayer-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -153,10 +153,10 @@
   font-size: 13px;
   color: var(--muted-color);
 }
-.GauntletPlayer-count {
+.BrainstormPlayer-count {
   font-weight: 600;
 }
-.GauntletPlayer-timer {
+.BrainstormPlayer-timer {
   margin-left: auto;
   display: inline-flex;
   gap: 6px;
@@ -169,7 +169,7 @@
     color: var(--error-color);
   }
 }
-.GauntletPlayer-progress {
+.BrainstormPlayer-progress {
   flex: 1 0 100%;
   height: 4px;
   border-radius: 2px;
@@ -183,7 +183,7 @@
     transition: width 0.2s;
   }
 }
-.GauntletQuestion-body {
+.BrainstormQuestion-body {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: @g-gap;
@@ -192,28 +192,28 @@
     margin-bottom: 0;
   }
 }
-.GauntletQuestion-image {
+.BrainstormQuestion-image {
   display: block;
   max-width: 100%;
   max-height: 360px;
   border-radius: 8px;
   margin: 0 0 @g-gap;
 }
-.GauntletQuestion-points {
+.BrainstormQuestion-points {
   font-size: 12px;
   color: var(--muted-color);
   margin: -4px 0 10px;
 }
-.GauntletOptions {
+.BrainstormOptions {
   display: grid;
   gap: 8px;
 }
-.GauntletOptions-hint {
+.BrainstormOptions-hint {
   font-size: 13px;
   color: var(--muted-color);
   margin: 0;
 }
-.GauntletOption {
+.BrainstormOption {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -243,7 +243,7 @@
     background: var(--control-bg);
   }
 }
-.GauntletOption-mark {
+.BrainstormOption-mark {
   flex: none;
   width: 18px;
   height: 18px;
@@ -259,29 +259,29 @@
     box-shadow: inset 0 0 0 3px var(--body-bg);
   }
 }
-.GauntletOption-text {
+.BrainstormOption-text {
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.GauntletPlayer-text {
+.BrainstormPlayer-text {
   max-width: 420px;
 }
-.GauntletPlayer-nav {
+.BrainstormPlayer-nav {
   display: flex;
   justify-content: space-between;
   gap: @g-gap;
   margin-top: 16px;
 }
-.GauntletPlayer-review {
+.BrainstormPlayer-review {
   padding: 8px 0;
 }
-.GauntletDots {
+.BrainstormDots {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 14px;
 }
-.GauntletDot {
+.BrainstormDot {
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -303,22 +303,22 @@
 }
 
 // A marked attempt.
-.GauntletResult-summary {
+.BrainstormResult-summary {
   display: flex;
   gap: 18px;
   align-items: center;
   flex-wrap: wrap;
 }
-.GauntletResult-ring {
-  --gauntlet-ring: 0%;
-  --gauntlet-tone: var(--error-color);
+.BrainstormResult-ring {
+  --brainstorm-ring: 0%;
+  --brainstorm-tone: var(--error-color);
   flex: none;
   width: 96px;
   height: 96px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: conic-gradient(var(--gauntlet-tone) var(--gauntlet-ring), var(--control-bg) 0);
+  background: conic-gradient(var(--brainstorm-tone) var(--brainstorm-ring), var(--control-bg) 0);
 
   > span {
     display: grid;
@@ -331,10 +331,10 @@
     font-weight: 700;
   }
   .is-passed & {
-    --gauntlet-tone: var(--control-success-color);
+    --brainstorm-tone: var(--control-success-color);
   }
 }
-.GauntletResult-text {
+.BrainstormResult-text {
   flex: 1;
   min-width: 220px;
 
@@ -342,7 +342,7 @@
     margin: 0 0 4px;
   }
 }
-.GauntletResult-headline {
+.BrainstormResult-headline {
   margin: 0 0 6px;
   font-size: 18px;
   display: flex;
@@ -356,21 +356,21 @@
     color: var(--error-color);
   }
 }
-.GauntletResult-note {
+.BrainstormResult-note {
   font-size: 13px;
   color: var(--muted-color);
 }
-.GauntletResult-actions {
+.BrainstormResult-actions {
   display: flex;
   gap: 8px;
   margin-top: 10px;
 }
-.GauntletReview {
+.BrainstormReview {
   list-style: none;
   padding: 0;
   margin: 18px 0 0;
 }
-.GauntletReview-item {
+.BrainstormReview-item {
   border-left: 3px solid var(--error-color);
   padding: 4px 0 4px 14px;
   margin-bottom: 18px;
@@ -382,7 +382,7 @@
     border-color: var(--alert-color);
   }
 }
-.GauntletReview-head {
+.BrainstormReview-head {
   display: flex;
   gap: 10px;
   align-items: center;
@@ -390,15 +390,15 @@
   color: var(--muted-color);
   margin-bottom: 4px;
 }
-.GauntletReview-number {
+.BrainstormReview-number {
   font-weight: 700;
 }
-.GauntletReview-state {
+.BrainstormReview-state {
   display: inline-flex;
   gap: 5px;
   align-items: center;
 }
-.GauntletReview-body {
+.BrainstormReview-body {
   font-weight: 600;
   margin-bottom: 8px;
 
@@ -406,12 +406,12 @@
     margin-bottom: 0;
   }
 }
-.GauntletReview-options {
+.BrainstormReview-options {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-.GauntletReview-option {
+.BrainstormReview-option {
   display: flex;
   gap: 8px;
   align-items: center;
@@ -429,14 +429,14 @@
     color: var(--error-color);
   }
 }
-.GauntletReview-yours {
+.BrainstormReview-yours {
   font-size: 11px;
   padding: 1px 6px;
   border-radius: 999px;
   background: var(--control-bg);
   color: var(--control-color);
 }
-.GauntletReview-explanation {
+.BrainstormReview-explanation {
   margin-top: 8px;
   padding: 8px 12px;
   border-radius: 6px;
@@ -449,12 +449,12 @@
 }
 
 // Leaderboards.
-.GauntletBoard-list {
+.BrainstormBoard-list {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-.GauntletBoard-row {
+.BrainstormBoard-row {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -464,12 +464,12 @@
   &.is-me {
     font-weight: 700;
   }
-  .GauntletPerson {
+  .BrainstormPerson {
     flex: 1;
     min-width: 0;
   }
 }
-.GauntletBoard-rank {
+.BrainstormBoard-rank {
   width: 24px;
   text-align: center;
   font-weight: 700;
@@ -485,23 +485,23 @@
     color: #b8733e;
   }
 }
-.GauntletBoard-value {
+.BrainstormBoard-value {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.GauntletBoard-extra {
+.BrainstormBoard-extra {
   min-width: 56px;
   text-align: right;
   font-size: 12px;
   color: var(--muted-color);
   font-variant-numeric: tabular-nums;
 }
-.GauntletBoard-me {
+.BrainstormBoard-me {
   font-size: 13px;
   margin: 8px 0 0;
   color: var(--muted-color);
 }
-.GauntletPerson {
+.BrainstormPerson {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -512,39 +512,39 @@
     flex: none;
   }
 }
-.GauntletPerson-name {
+.BrainstormPerson-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 // Pages.
-.GauntletIndexPage-head {
+.BrainstormIndexPage-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: @g-gap;
   margin-bottom: 14px;
 }
-.GauntletIndexPage-title,
-.GauntletQuizPage-title {
+.BrainstormIndexPage-title,
+.BrainstormQuizPage-title {
   margin: 0;
   font-size: 22px;
 }
-.GauntletIndexPage-toolbar {
+.BrainstormIndexPage-toolbar {
   display: flex;
   gap: @g-gap;
   align-items: center;
   flex-wrap: wrap;
   margin-bottom: 14px;
 }
-.GauntletIndexPage-search {
+.BrainstormIndexPage-search {
   flex: 1;
   min-width: 160px;
   max-width: 280px;
   margin-left: auto;
 }
-.GauntletTabs {
+.BrainstormTabs {
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
@@ -555,8 +555,8 @@
     font-weight: 700;
   }
 }
-.GauntletIndexPage-body,
-.GauntletQuizPage-layout {
+.BrainstormIndexPage-body,
+.BrainstormQuizPage-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 280px;
   gap: 24px;
@@ -566,8 +566,8 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
-.GauntletIndexPage-board,
-.GauntletQuizPage-side {
+.BrainstormIndexPage-board,
+.BrainstormQuizPage-side {
   h3 {
     margin-top: 0;
     font-size: 14px;
@@ -575,17 +575,17 @@
     color: var(--muted-color);
   }
 }
-.GauntletIndexPage-more {
+.BrainstormIndexPage-more {
   display: block;
   margin: 0 auto;
 }
-.GauntletQuizPage-back {
+.BrainstormQuizPage-back {
   padding-left: 0;
 }
-.GauntletQuizPage-title {
+.BrainstormQuizPage-title {
   margin-bottom: 6px;
 }
-.GauntletQuizPage-byline {
+.BrainstormQuizPage-byline {
   display: flex;
   flex-wrap: wrap;
   gap: 6px 14px;
@@ -594,34 +594,34 @@
   color: var(--muted-color);
   margin-bottom: 8px;
 }
-.GauntletQuizPage-window {
+.BrainstormQuizPage-window {
   font-size: 13px;
   font-weight: 600;
   margin: 8px 0 0;
 }
-.GauntletQuizPage-description {
+.BrainstormQuizPage-description {
   margin: 14px 0;
 }
-.GauntletQuizPage-tools {
+.BrainstormQuizPage-tools {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   margin: 14px 0;
 }
-.GauntletQuizPage-cta {
+.BrainstormQuizPage-cta {
   padding: 14px 16px;
   border-radius: @g-radius;
   background: var(--control-bg);
 }
 
 // The editor.
-.GauntletEditor-head {
+.BrainstormEditor-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: @g-gap;
 }
-.GauntletEditor-layout {
+.BrainstormEditor-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;
   gap: 24px;
@@ -631,27 +631,27 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
-.GauntletEditor-section {
+.BrainstormEditor-section {
   font-size: 15px;
   margin: 20px 0 10px;
 }
-.GauntletEditor-questions {
+.BrainstormEditor-questions {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-.GauntletEditor-question {
+.BrainstormEditor-question {
   border: 1px solid var(--control-bg);
   border-radius: @g-radius;
   background: var(--body-bg);
   margin-bottom: @g-gap;
 
   // Folded to their heads while a question is being dragged.
-  .is-sorting & .GauntletEditor-questionBody {
+  .is-sorting & .BrainstormEditor-questionBody {
     display: none;
   }
 }
-.GauntletEditor-questionHead {
+.BrainstormEditor-questionHead {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -662,7 +662,7 @@
     width: auto;
   }
 }
-.GauntletEditor-handle {
+.BrainstormEditor-handle {
   cursor: grab;
   touch-action: none;
   padding: 4px;
@@ -672,10 +672,10 @@
     cursor: grabbing;
   }
 }
-.GauntletEditor-number {
+.BrainstormEditor-number {
   font-weight: 700;
 }
-.GauntletEditor-summary {
+.BrainstormEditor-summary {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -683,24 +683,24 @@
   text-overflow: ellipsis;
   color: var(--muted-color);
 }
-.GauntletEditor-questionBody {
+.BrainstormEditor-questionBody {
   padding: 12px;
   display: grid;
   gap: 10px;
 }
-.GauntletEditor-image {
+.BrainstormEditor-image {
   display: flex;
   gap: 8px;
 }
-.GauntletEditor-preview {
+.BrainstormEditor-preview {
   max-width: 200px;
   max-height: 120px;
   border-radius: 6px;
 }
-.GauntletEditor-options .helpText {
+.BrainstormEditor-options .helpText {
   margin: 0 0 6px;
 }
-.GauntletEditor-option {
+.BrainstormEditor-option {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -717,15 +717,15 @@
     border-color: var(--control-success-color);
   }
 }
-.GauntletEditor-acceptIcon {
+.BrainstormEditor-acceptIcon {
   color: var(--control-success-color);
   width: 18px;
 }
-.GauntletEditor-boolean {
+.BrainstormEditor-boolean {
   display: flex;
   gap: 8px;
 }
-.GauntletEditor-points {
+.BrainstormEditor-points {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -735,16 +735,16 @@
     width: 80px;
   }
 }
-.GauntletEditor-explanationLabel {
+.BrainstormEditor-explanationLabel {
   font-size: 13px;
   margin-bottom: -4px;
 }
-.GauntletEditor-add {
+.BrainstormEditor-add {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
-.GauntletEditor-settings {
+.BrainstormEditor-settings {
   .Form-group {
     margin-bottom: 14px;
   }
@@ -755,7 +755,7 @@
     margin-top: 8px;
   }
 }
-.GauntletEditor-time {
+.BrainstormEditor-time {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -764,7 +764,7 @@
     width: 72px;
   }
 }
-.GauntletEditor-rewards {
+.BrainstormEditor-rewards {
   border: 1px solid var(--control-bg);
   border-radius: 8px;
   padding: 10px 12px 0;
@@ -775,11 +775,11 @@
     padding: 0 4px;
   }
 }
-.GauntletEditor-error {
+.BrainstormEditor-error {
   color: var(--error-color);
   font-weight: 600;
 }
-.GauntletEditor-actions {
+.BrainstormEditor-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -787,7 +787,7 @@
 }
 
 // Staff results.
-.GauntletResults {
+.BrainstormResults {
   h4 {
     font-size: 13px;
     margin: 0 0 8px;
@@ -796,8 +796,8 @@
     margin-top: 18px;
   }
 }
-.GauntletResults-questions,
-.GauntletResults-attempts {
+.BrainstormResults-questions,
+.BrainstormResults-attempts {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -812,10 +812,10 @@
     border-bottom: 1px solid var(--control-bg);
   }
 }
-.GauntletResults-question {
+.BrainstormResults-question {
   flex: 1 0 100%;
 }
-.GauntletResults-bar {
+.BrainstormResults-bar {
   flex: 1;
   height: 6px;
   border-radius: 3px;
@@ -828,32 +828,32 @@
     background: var(--primary-color);
   }
 }
-.GauntletResults-value {
+.BrainstormResults-value {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.GauntletResults-meta {
+.BrainstormResults-meta {
   flex: 1 0 100%;
   color: var(--muted-color);
   font-size: 12px;
 }
-.GauntletResults-attempts {
-  .GauntletPerson {
+.BrainstormResults-attempts {
+  .BrainstormPerson {
     flex: 1;
     min-width: 0;
   }
-  .is-passed .GauntletResults-value {
+  .is-passed .BrainstormResults-value {
     color: var(--control-success-color);
   }
 }
 
 // The composer's quiz picker.
-.GauntletPicker-list {
+.BrainstormPicker-list {
   list-style: none;
   padding: 0;
   margin: 10px 0;
 }
-.GauntletPicker-item {
+.BrainstormPicker-item {
   width: 100%;
   text-align: left;
   display: flex;
@@ -865,16 +865,16 @@
     flex-direction: column;
   }
 }
-.GauntletPicker-meta {
+.BrainstormPicker-meta {
   font-size: 12px;
   color: var(--muted-color);
 }
 
 // Widgets.
-.GauntletWidget-heading {
+.BrainstormWidget-heading {
   margin-top: 0;
 }
-.GauntletWidget-latest {
+.BrainstormWidget-latest {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -885,37 +885,37 @@
     flex-direction: column;
   }
 }
-.GauntletWidget-meta {
+.BrainstormWidget-meta {
   font-size: 12px;
   color: var(--muted-color);
 }
-.GauntletWidget-more {
+.BrainstormWidget-more {
   padding-left: 0;
 }
 
 // Inside a post the card sits in .Post-body, whose headings, links and lists
 // are styled for prose. The card keeps its own look there.
-.Post-body .GauntletEmbed {
+.Post-body .BrainstormEmbed {
   margin: 10px 0;
 
-  .GauntletCard-title {
+  .BrainstormCard-title {
     font-size: 16px;
     margin: 0 0 4px;
   }
   a {
     text-decoration: none;
   }
-  .GauntletReview,
-  .GauntletReview-options {
+  .BrainstormReview,
+  .BrainstormReview-options {
     list-style: none;
     padding: 0;
   }
-  .GauntletReview-options {
+  .BrainstormReview-options {
     margin: 0;
   }
-  .GauntletResult-text p,
-  .GauntletOptions-hint,
-  .GauntletQuestion-points {
+  .BrainstormResult-text p,
+  .BrainstormOptions-hint,
+  .BrainstormQuestion-points {
     margin-top: 0;
   }
 }

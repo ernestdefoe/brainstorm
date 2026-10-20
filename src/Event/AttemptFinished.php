@@ -1,8 +1,8 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet\Event;
+namespace ErnestDefoe\Brainstorm\Event;
 
-use ErnestDefoe\Gauntlet\Attempt;
+use ErnestDefoe\Brainstorm\Attempt;
 use Flarum\User\User;
 
 /**

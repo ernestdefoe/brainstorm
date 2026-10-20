@@ -6,7 +6,7 @@ import type Mithril from 'mithril';
 import type { Quiz, Result, ReviewQuestion } from '../../common/api';
 import { clock, percent } from '../../common/format';
 
-const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-gauntlet.forum.result.${key}`, params);
+const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-brainstorm.forum.result.${key}`, params);
 
 interface Attrs {
   result: Result;
@@ -23,13 +23,13 @@ export default class ResultView extends Component<Attrs> {
     const ring = Math.max(0, Math.min(100, r.percent));
 
     return (
-      <div className={'GauntletResult' + (r.passed ? ' is-passed' : ' is-failed')}>
-        <div className="GauntletResult-summary">
-          <div className="GauntletResult-ring" style={{ '--gauntlet-ring': ring + '%' }} aria-hidden="true">
+      <div className={'BrainstormResult' + (r.passed ? ' is-passed' : ' is-failed')}>
+        <div className="BrainstormResult-summary">
+          <div className="BrainstormResult-ring" style={{ '--brainstorm-ring': ring + '%' }} aria-hidden="true">
             <span>{percent(r.percent)}</span>
           </div>
-          <div className="GauntletResult-text">
-            <h4 className="GauntletResult-headline">
+          <div className="BrainstormResult-text">
+            <h4 className="BrainstormResult-headline">
               <Icon name={r.passed ? 'fas fa-circle-check' : 'fas fa-circle-xmark'} />
               {t(r.passed ? 'passed' : 'not_passed')}
             </h4>
@@ -38,10 +38,10 @@ export default class ResultView extends Component<Attrs> {
               {' · '}
               {t('time', { time: clock(r.duration) })}
             </p>
-            {r.expired ? <p className="GauntletResult-note">{t('expired')}</p> : null}
-            {r.practice ? <p className="GauntletResult-note">{t('practice')}</p> : null}
-            {r.attemptsLeft !== null && !r.practice ? <p className="GauntletResult-note">{t('attempts_left', { count: r.attemptsLeft })}</p> : null}
-            <div className="GauntletResult-actions">
+            {r.expired ? <p className="BrainstormResult-note">{t('expired')}</p> : null}
+            {r.practice ? <p className="BrainstormResult-note">{t('practice')}</p> : null}
+            {r.attemptsLeft !== null && !r.practice ? <p className="BrainstormResult-note">{t('attempts_left', { count: r.attemptsLeft })}</p> : null}
+            <div className="BrainstormResult-actions">
               {canRetry ? (
                 <Button className="Button Button--primary" icon="fas fa-rotate-right" onclick={() => this.attrs.onretry!()}>
                   {t('again')}
@@ -56,8 +56,8 @@ export default class ResultView extends Component<Attrs> {
           </div>
         </div>
 
-        {r.review ? <ol className="GauntletReview">{r.review.map((q, i) => this.question(q, i))}</ol> : null}
-        {r.review && r.answersLater ? <p className="GauntletResult-note">{t('key_hidden')}</p> : null}
+        {r.review ? <ol className="BrainstormReview">{r.review.map((q, i) => this.question(q, i))}</ol> : null}
+        {r.review && r.answersLater ? <p className="BrainstormResult-note">{t('key_hidden')}</p> : null}
       </div>
     );
   }
@@ -68,21 +68,21 @@ export default class ResultView extends Component<Attrs> {
     const state = right ? 'right' : part ? 'partial' : 'wrong';
 
     return (
-      <li className={'GauntletReview-item is-' + state} key={q.id}>
-        <div className="GauntletReview-head">
-          <span className="GauntletReview-number">{i + 1}</span>
-          <span className="GauntletReview-state">
+      <li className={'BrainstormReview-item is-' + state} key={q.id}>
+        <div className="BrainstormReview-head">
+          <span className="BrainstormReview-number">{i + 1}</span>
+          <span className="BrainstormReview-state">
             <Icon name={right ? 'fas fa-check' : part ? 'fas fa-circle-half-stroke' : 'fas fa-xmark'} />
             {t(state, { earned: q.earned, points: q.points })}
           </span>
         </div>
-        <div className="GauntletReview-body Post-body">{q.bodyHtml ? m.trust(q.bodyHtml) : null}</div>
+        <div className="BrainstormReview-body Post-body">{q.bodyHtml ? m.trust(q.bodyHtml) : null}</div>
         {q.imageUrl ? (
-          <img className="GauntletQuestion-image" src={q.imageUrl} alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+          <img className="BrainstormQuestion-image" src={q.imageUrl} alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
         ) : null}
 
         {q.type === 'text' ? (
-          <div className="GauntletReview-typed">
+          <div className="BrainstormReview-typed">
             <span>{t('you_typed')}</span> <strong>{q.typed ?? t('no_answer')}</strong>
             {q.accepted ? (
               <div>
@@ -91,11 +91,11 @@ export default class ResultView extends Component<Attrs> {
             ) : null}
           </div>
         ) : (
-          <ul className="GauntletReview-options">
+          <ul className="BrainstormReview-options">
             {q.options.map((o) => (
               <li
                 className={
-                  'GauntletReview-option' +
+                  'BrainstormReview-option' +
                   (o.chosen ? ' is-chosen' : '') +
                   (o.correct === true ? ' is-correct' : '') +
                   (o.correct === false && o.chosen ? ' is-wrong' : '')
@@ -103,15 +103,15 @@ export default class ResultView extends Component<Attrs> {
               >
                 <Icon name={o.correct ? 'fas fa-check' : o.chosen ? (o.correct === false ? 'fas fa-xmark' : 'fas fa-circle-dot') : 'far fa-circle'} />
                 <span>
-                  {q.type === 'boolean' ? app.translator.trans(`ernestdefoe-gauntlet.forum.player.${o.id === 'true' ? 'true' : 'false'}`) : o.text}
+                  {q.type === 'boolean' ? app.translator.trans(`ernestdefoe-brainstorm.forum.player.${o.id === 'true' ? 'true' : 'false'}`) : o.text}
                 </span>
-                {o.chosen ? <span className="GauntletReview-yours">{t('your_answer')}</span> : null}
+                {o.chosen ? <span className="BrainstormReview-yours">{t('your_answer')}</span> : null}
               </li>
             ))}
           </ul>
         )}
 
-        {q.explanationHtml ? <div className="GauntletReview-explanation Post-body">{m.trust(q.explanationHtml)}</div> : null}
+        {q.explanationHtml ? <div className="BrainstormReview-explanation Post-body">{m.trust(q.explanationHtml)}</div> : null}
       </li>
     );
   }

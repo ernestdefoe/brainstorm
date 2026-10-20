@@ -1,13 +1,13 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet\Api;
+namespace ErnestDefoe\Brainstorm\Api;
 
 use Carbon\Carbon;
-use ErnestDefoe\Gauntlet\Access;
-use ErnestDefoe\Gauntlet\Attempt;
-use ErnestDefoe\Gauntlet\Attempts;
-use ErnestDefoe\Gauntlet\Presenter;
-use ErnestDefoe\Gauntlet\Quiz;
+use ErnestDefoe\Brainstorm\Access;
+use ErnestDefoe\Brainstorm\Attempt;
+use ErnestDefoe\Brainstorm\Attempts;
+use ErnestDefoe\Brainstorm\Presenter;
+use ErnestDefoe\Brainstorm\Quiz;
 use Flarum\Http\RequestUtil;
 use Flarum\User\Exception\PermissionDeniedException;
 use Flarum\User\User;
@@ -55,7 +55,7 @@ class AttemptController implements RequestHandlerInterface
             throw new ModelNotFoundException();
         }
 
-        if ($method !== 'GET' && ! $actor->hasPermission('gauntlet.take')) {
+        if ($method !== 'GET' && ! $actor->hasPermission('brainstorm.take')) {
             throw new PermissionDeniedException();
         }
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet\Tests\integration\api;
+namespace ErnestDefoe\Brainstorm\Tests\integration\api;
 
 use Carbon\Carbon;
 use Flarum\Group\Group;
@@ -17,7 +17,7 @@ class QuizTest extends TestCase
     {
         parent::setUp();
 
-        $this->extension('ernestdefoe-gauntlet');
+        $this->extension('ernestdefoe-brainstorm');
 
         $this->prepareDatabase([
             User::class => [
@@ -326,7 +326,7 @@ class QuizTest extends TestCase
     #[Test]
     public function an_author_without_the_reward_permission_cannot_attach_rewards(): void
     {
-        $this->prepareDatabase(['group_permission' => [['group_id' => Group::MEMBER_ID, 'permission' => 'gauntlet.create']]]);
+        $this->prepareDatabase(['group_permission' => [['group_id' => Group::MEMBER_ID, 'permission' => 'brainstorm.create']]]);
 
         [$status, $body, $raw] = $this->json('POST', '/api/quizzes', 2, ['data' => [
             'title' => 'Points for me',
@@ -518,7 +518,7 @@ class QuizTest extends TestCase
     #[Test]
     public function an_author_cannot_change_how_a_rewarded_quiz_is_marked(): void
     {
-        $this->prepareDatabase(['group_permission' => [['group_id' => Group::MEMBER_ID, 'permission' => 'gauntlet.create']]]);
+        $this->prepareDatabase(['group_permission' => [['group_id' => Group::MEMBER_ID, 'permission' => 'brainstorm.create']]]);
         [, $made] = $this->json('POST', '/api/quizzes', 2, ['data' => [
             'title' => 'Mine', 'status' => 'published', 'passMark' => 80,
             'questions' => [['type' => 'boolean', 'body' => 'Yes?', 'options' => [['id' => 'true', 'correct' => true]]]],

@@ -13,20 +13,20 @@ import registerWidgets from './widgets';
  * wiring. The pages, the player, the editor and the in-post card are their
  * own chunks, fetched the first time something needs them.
  */
-app.initializers.add('ernestdefoe-gauntlet', () => {
-  app.routes['gauntlet.index'] = { path: '/quizzes', component: () => import('./pages/QuizzesPage') };
-  app.routes['gauntlet.new'] = { path: '/quizzes/new', component: () => import('./pages/EditorPage') };
-  app.routes['gauntlet.leaderboard'] = { path: '/quizzes/leaderboard', component: () => import('./pages/LeaderboardPage') };
-  app.routes['gauntlet.quiz'] = { path: '/quizzes/:id', component: () => import('./pages/QuizPage') };
-  app.routes['gauntlet.edit'] = { path: '/quizzes/:id/edit', component: () => import('./pages/EditorPage') };
+app.initializers.add('ernestdefoe-brainstorm', () => {
+  app.routes['brainstorm.index'] = { path: '/quizzes', component: () => import('./pages/QuizzesPage') };
+  app.routes['brainstorm.new'] = { path: '/quizzes/new', component: () => import('./pages/EditorPage') };
+  app.routes['brainstorm.leaderboard'] = { path: '/quizzes/leaderboard', component: () => import('./pages/LeaderboardPage') };
+  app.routes['brainstorm.quiz'] = { path: '/quizzes/:id', component: () => import('./pages/QuizPage') };
+  app.routes['brainstorm.edit'] = { path: '/quizzes/:id/edit', component: () => import('./pages/EditorPage') };
 
   extend(IndexSidebar.prototype, 'navItems', function (items) {
-    if (!app.forum.attribute('canViewQuizzes') || app.forum.attribute('gauntletShowNav') === false) return;
+    if (!app.forum.attribute('canViewQuizzes') || app.forum.attribute('brainstormShowNav') === false) return;
 
     items.add(
       'quizzes',
-      <LinkButton href={app.route('gauntlet.index')} icon="fas fa-graduation-cap">
-        {app.translator.trans('ernestdefoe-gauntlet.forum.nav')}
+      <LinkButton href={app.route('brainstorm.index')} icon="fas fa-graduation-cap">
+        {app.translator.trans('ernestdefoe-brainstorm.forum.nav')}
       </LinkButton>,
       4
     );
@@ -51,7 +51,7 @@ app.initializers.add('ernestdefoe-gauntlet', () => {
           icon="fas fa-graduation-cap"
           onclick={() => app.modal.show(() => import('./components/QuizPickerModal'), { composer: this.composer })}
         >
-          {app.translator.trans('ernestdefoe-gauntlet.forum.composer.add')}
+          {app.translator.trans('ernestdefoe-brainstorm.forum.composer.add')}
         </Button>,
         1
       );
@@ -76,7 +76,7 @@ app.initializers.add('ernestdefoe-gauntlet', () => {
           });
         }}
       >
-        {app.translator.trans('ernestdefoe-gauntlet.forum.settings.private')}
+        {app.translator.trans('ernestdefoe-brainstorm.forum.settings.private')}
       </Switch>
     );
   });

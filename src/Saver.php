@@ -1,6 +1,6 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet;
+namespace ErnestDefoe\Brainstorm;
 
 use Carbon\Carbon;
 use Flarum\Foundation\ValidationException;
@@ -356,6 +356,6 @@ class Saver
     /** @param array<string, int|string> $params */
     private function fail(string $field, string $key, array $params = []): never
     {
-        throw new ValidationException([$field => $this->translator->trans('ernestdefoe-gauntlet.api.'.$key, $params)]);
+        throw new ValidationException([$field => $this->translator->trans('ernestdefoe-brainstorm.api.'.$key, $params)]);
     }
 }

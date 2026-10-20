@@ -1,8 +1,8 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet\Integration\Badges;
+namespace ErnestDefoe\Brainstorm\Integration\Badges;
 
-use ErnestDefoe\Gauntlet\Event\AttemptFinished;
+use ErnestDefoe\Brainstorm\Event\AttemptFinished;
 use Flarum\User\User;
 use FoF\Badges\Trigger\MetricInterface;
 use Illuminate\Database\ConnectionInterface;
@@ -16,12 +16,12 @@ class QuizzesPassedMetric implements MetricInterface
 
     public function getType(): string
     {
-        return 'gauntlet_quizzes_passed';
+        return 'brainstorm_quizzes_passed';
     }
 
     public function getTranslationKey(): string
     {
-        return 'ernestdefoe-gauntlet.admin.badges.quizzes_passed';
+        return 'ernestdefoe-brainstorm.admin.badges.quizzes_passed';
     }
 
     public function getEventTriggers(): array
@@ -46,6 +46,6 @@ class QuizzesPassedMetric implements MetricInterface
 
     public function getExtensionDependencies(): array
     {
-        return ['ernestdefoe/gauntlet'];
+        return ['ernestdefoe/brainstorm'];
     }
 }

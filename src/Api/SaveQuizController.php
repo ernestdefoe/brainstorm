@@ -1,12 +1,12 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet\Api;
+namespace ErnestDefoe\Brainstorm\Api;
 
 use Carbon\Carbon;
-use ErnestDefoe\Gauntlet\Access;
-use ErnestDefoe\Gauntlet\Presenter;
-use ErnestDefoe\Gauntlet\Quiz;
-use ErnestDefoe\Gauntlet\Saver;
+use ErnestDefoe\Brainstorm\Access;
+use ErnestDefoe\Brainstorm\Presenter;
+use ErnestDefoe\Brainstorm\Quiz;
+use ErnestDefoe\Brainstorm\Saver;
 use Flarum\Foundation\ValidationException;
 use Flarum\Http\RequestUtil;
 use Flarum\User\Exception\PermissionDeniedException;
@@ -39,9 +39,9 @@ class SaveQuizController implements RequestHandlerInterface
                 throw new PermissionDeniedException();
             }
 
-            if (! $actor->hasPermission('gauntlet.manage')
+            if (! $actor->hasPermission('brainstorm.manage')
                 && Quiz::query()->where('user_id', $actor->id)->where('created_at', '>', Carbon::now()->subHour())->count() >= self::HOURLY) {
-                throw new ValidationException(['title' => $this->translator->trans('ernestdefoe-gauntlet.api.slow_down')]);
+                throw new ValidationException(['title' => $this->translator->trans('ernestdefoe-brainstorm.api.slow_down')]);
             }
 
             $quiz = null;

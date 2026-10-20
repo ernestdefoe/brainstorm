@@ -21,7 +21,7 @@ export function span(seconds: number): string {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
-  const t = (key: string, count: number) => extractText(app.translator.trans(`ernestdefoe-gauntlet.lib.units.${key}`, { count }));
+  const t = (key: string, count: number) => extractText(app.translator.trans(`ernestdefoe-brainstorm.lib.units.${key}`, { count }));
 
   return [h && t('hours', h), m && t('minutes', m), (s || !(h || m)) && t('seconds', s)].filter(Boolean).join(' ');
 }

@@ -9,7 +9,7 @@ import type Mithril from 'mithril';
 import { listQuizzes } from '../../common/api';
 import type { Quiz } from '../../common/api';
 
-const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-gauntlet.forum.composer.${key}`, params);
+const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-brainstorm.forum.composer.${key}`, params);
 
 interface Attrs extends IInternalModalAttrs {
   composer: any;
@@ -19,7 +19,7 @@ interface Attrs extends IInternalModalAttrs {
  * Pick a quiz to put in the post. What goes in is the quiz's link on a line of
  * its own, which every editor keeps as a link — Markdown, BBCode, Scribe,
  * FoF Rich Text — and which the post then shows as the quiz itself. A forum
- * without Gauntlet, or a reader who may not see the quiz, sees the link.
+ * without Brainstorm, or a reader who may not see the quiz, sees the link.
  */
 export default class QuizPickerModal extends Modal<Attrs> {
   quizzes: Quiz[] = [];
@@ -30,7 +30,7 @@ export default class QuizPickerModal extends Modal<Attrs> {
   asked = 0;
 
   className() {
-    return 'GauntletPicker Modal--small';
+    return 'BrainstormPicker Modal--small';
   }
 
   title() {
@@ -80,21 +80,21 @@ export default class QuizPickerModal extends Modal<Attrs> {
         {this.loading ? (
           <LoadingIndicator display="block" />
         ) : this.quizzes.length ? (
-          <ul className="GauntletPicker-list">
+          <ul className="BrainstormPicker-list">
             {this.quizzes.map((quiz) => (
               <li>
-                <Button className="Button Button--flat GauntletPicker-item" icon="fas fa-graduation-cap" onclick={() => this.insert(quiz)}>
-                  <span className="GauntletPicker-title">{quiz.title}</span>
-                  <span className="GauntletPicker-meta">{t('meta', { count: quiz.questionCount })}</span>
+                <Button className="Button Button--flat BrainstormPicker-item" icon="fas fa-graduation-cap" onclick={() => this.insert(quiz)}>
+                  <span className="BrainstormPicker-title">{quiz.title}</span>
+                  <span className="BrainstormPicker-meta">{t('meta', { count: quiz.questionCount })}</span>
                 </Button>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="GauntletEmpty">{t('none')}</p>
+          <p className="BrainstormEmpty">{t('none')}</p>
         )}
         {app.forum.attribute('canCreateQuizzes') ? (
-          <LinkButton className="Button Button--link" icon="fas fa-plus" href={app.route('gauntlet.new')} onclick={() => this.hide()}>
+          <LinkButton className="Button Button--link" icon="fas fa-plus" href={app.route('brainstorm.new')} onclick={() => this.hide()}>
             {t('create')}
           </LinkButton>
         ) : null}

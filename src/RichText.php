@@ -1,6 +1,6 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet;
+namespace ErnestDefoe\Brainstorm;
 
 use Flarum\Formatter\Formatter;
 use Flarum\User\User;

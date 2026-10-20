@@ -3,7 +3,7 @@ import Icon from 'flarum/common/components/Icon';
 import type { Quiz } from '../../common/api';
 import { span } from '../../common/format';
 
-const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-gauntlet.forum.facts.${key}`, params);
+const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-brainstorm.forum.facts.${key}`, params);
 
 /** One line of what a quiz asks of you: questions, time, pass mark, attempts, rewards. */
 export default function quizFacts(quiz: Quiz): any {
@@ -30,14 +30,14 @@ export default function quizFacts(quiz: Quiz): any {
       </span>
     ) : null,
     quiz.rewardPoints ? (
-      <span className="GauntletFacts-reward">
+      <span className="BrainstormFacts-reward">
         <Icon name="fas fa-coins" />
         {t('points', { count: quiz.rewardPoints })}
       </span>
     ) : null,
     quiz.rewardBadge ? (
-      <span className="GauntletFacts-reward">
-        <span className="GauntletBadgeIcon" style={{ color: quiz.rewardBadge.color, background: quiz.rewardBadge.background }}>
+      <span className="BrainstormFacts-reward">
+        <span className="BrainstormBadgeIcon" style={{ color: quiz.rewardBadge.color, background: quiz.rewardBadge.background }}>
           <Icon name={quiz.rewardBadge.icon} />
         </span>
         {t('badge', { name: quiz.rewardBadge.name })}
@@ -45,5 +45,5 @@ export default function quizFacts(quiz: Quiz): any {
     ) : null,
   ];
 
-  return <div className="GauntletFacts">{facts}</div>;
+  return <div className="BrainstormFacts">{facts}</div>;
 }

@@ -38,11 +38,11 @@ export default function scan(root: Element | undefined): void {
 
   const found: Array<[HTMLAnchorElement, number]> = [];
 
-  root.querySelectorAll<HTMLAnchorElement>('.Post-body a[href*="/quizzes/"]:not([data-gauntlet])').forEach((a) => {
-    a.setAttribute('data-gauntlet', '');
+  root.querySelectorAll<HTMLAnchorElement>('.Post-body a[href*="/quizzes/"]:not([data-brainstorm])').forEach((a) => {
+    a.setAttribute('data-brainstorm', '');
 
     // Never a link inside a quiz already shown: the card's own title links to its quiz.
-    if (a.closest('.GauntletEmbed')) return;
+    if (a.closest('.BrainstormEmbed')) return;
 
     const id = idOf(a);
     const parent = a.parentElement;

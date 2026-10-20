@@ -1,6 +1,6 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet;
+namespace ErnestDefoe\Brainstorm;
 
 use Flarum\Extension\ExtensionManager;
 use Flarum\User\User;
@@ -14,7 +14,7 @@ use Illuminate\Contracts\Container\Container;
  * admin resets a member's attempts and they pass again.
  *
  * 🚨 Both FoF extensions are optional and resolved by NAME when paying.
- * Nothing here imports them, so Gauntlet loads the same with either, both or
+ * Nothing here imports them, so Brainstorm loads the same with either, both or
  * neither installed.
  */
 class Rewards
@@ -44,7 +44,7 @@ class Rewards
         }
 
         if ($quiz->reward_points !== 0 && $this->pointsAvailable()) {
-            $this->container->make(self::POINT_GRANTS)->grant($user, 'gauntlet', 'quiz:'.$quiz->id, $quiz->reward_points);
+            $this->container->make(self::POINT_GRANTS)->grant($user, 'brainstorm', 'quiz:'.$quiz->id, $quiz->reward_points);
         }
 
         if ($quiz->reward_badge_id && $this->badgesAvailable()) {

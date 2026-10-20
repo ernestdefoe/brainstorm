@@ -54,7 +54,7 @@ export default function embed(links: Array<[HTMLAnchorElement, number]>): void {
       if (!quiz || !a.isConnected) return;
 
       const holder = document.createElement('div');
-      holder.className = 'GauntletEmbed';
+      holder.className = 'BrainstormEmbed';
       // A block in place of the paragraph's link; the paragraph stays put.
       a.replaceWith(holder);
 

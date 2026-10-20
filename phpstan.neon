@@ -12,7 +12,7 @@ parameters:
         - extend.php
         - src
     # Onramp and Page Builder are optional and not on Packagist: the classes
-    # Gauntlet builds on are described for the analyser only.
+    # Brainstorm builds on are described for the analyser only.
     scanFiles:
         - tests/phpstan/optional-extensions.php
     databaseMigrationsPath:

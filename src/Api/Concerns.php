@@ -1,9 +1,9 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet\Api;
+namespace ErnestDefoe\Brainstorm\Api;
 
-use ErnestDefoe\Gauntlet\Access;
-use ErnestDefoe\Gauntlet\Quiz;
+use ErnestDefoe\Brainstorm\Access;
+use ErnestDefoe\Brainstorm\Quiz;
 use Flarum\User\Exception\PermissionDeniedException;
 use Flarum\User\User;
 use Illuminate\Support\Arr;

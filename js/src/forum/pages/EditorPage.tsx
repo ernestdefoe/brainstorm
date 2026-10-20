@@ -14,7 +14,7 @@ import type { Badge, Editable, EditableQuestion, QuestionType, Reveal } from '..
 import Sortable from '../utils/sortable';
 import { hasMediaLibrary, pickImage } from '../utils/mediaLibrary';
 
-const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-gauntlet.forum.editor.${key}`, params);
+const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-brainstorm.forum.editor.${key}`, params);
 const text = (key: string, params: Record<string, unknown> = {}) => extractText(t(key, params));
 
 const TYPES: QuestionType[] = ['single', 'multiple', 'boolean', 'text'];
@@ -105,7 +105,7 @@ export default class EditorPage extends Page {
         this.meta = data;
         m.redraw();
       },
-      () => m.route.set(app.route('gauntlet.index'))
+      () => m.route.set(app.route('brainstorm.index'))
     );
 
     if (id) {
@@ -118,7 +118,7 @@ export default class EditorPage extends Page {
           this.quiz.questions.forEach((q) => (q.key = key()));
           m.redraw();
         },
-        () => m.route.set(app.route('gauntlet.index'))
+        () => m.route.set(app.route('brainstorm.index'))
       );
     } else {
       this.quiz = blankQuiz();
@@ -144,10 +144,10 @@ export default class EditorPage extends Page {
     const quiz = this.quiz;
 
     return (
-      <PageStructure className="GauntletEditorPage" sidebar={() => <IndexSidebar />} loading={!quiz || !this.meta}>
+      <PageStructure className="BrainstormEditorPage" sidebar={() => <IndexSidebar />} loading={!quiz || !this.meta}>
         {quiz && this.meta ? (
-          <div className="GauntletEditor" oninput={() => (this.dirty = true)} onchange={() => (this.dirty = true)}>
-            <div className="GauntletEditor-head">
+          <div className="BrainstormEditor" oninput={() => (this.dirty = true)} onchange={() => (this.dirty = true)}>
+            <div className="BrainstormEditor-head">
               <h2>{t(this.id ? 'edit_title' : 'new_title')}</h2>
               {this.id ? (
                 <LinkButton className="Button" icon="fas fa-eye" href={quizUrl({ id: this.id, slug: this.slug })}>
@@ -156,12 +156,12 @@ export default class EditorPage extends Page {
               ) : null}
             </div>
 
-            <div className="GauntletEditor-layout">
-              <div className="GauntletEditor-main">
+            <div className="BrainstormEditor-layout">
+              <div className="BrainstormEditor-main">
                 <div className="Form-group">
-                  <label for="gauntlet-title">{t('title')}</label>
+                  <label for="brainstorm-title">{t('title')}</label>
                   <input
-                    id="gauntlet-title"
+                    id="brainstorm-title"
                     className="FormControl"
                     maxlength={200}
                     value={quiz.title}
@@ -169,9 +169,9 @@ export default class EditorPage extends Page {
                   />
                 </div>
                 <div className="Form-group">
-                  <label for="gauntlet-description">{t('description')}</label>
+                  <label for="brainstorm-description">{t('description')}</label>
                   <textarea
-                    id="gauntlet-description"
+                    id="brainstorm-description"
                     className="FormControl"
                     rows={3}
                     value={quiz.description}
@@ -180,11 +180,11 @@ export default class EditorPage extends Page {
                   <p className="helpText">{t('formatting_help')}</p>
                 </div>
 
-                <h3 className="GauntletEditor-section">{t('questions', { count: quiz.questions.length })}</h3>
-                <ol className="GauntletEditor-questions" data-sortable>
+                <h3 className="BrainstormEditor-section">{t('questions', { count: quiz.questions.length })}</h3>
+                <ol className="BrainstormEditor-questions" data-sortable>
                   {quiz.questions.map((q, i) => this.question(q, i))}
                 </ol>
-                <div className="GauntletEditor-add">
+                <div className="BrainstormEditor-add">
                   {TYPES.map((type) => (
                     <Button className="Button" icon="fas fa-plus" onclick={() => this.add(type)}>
                       {t('types.' + type)}
@@ -193,7 +193,7 @@ export default class EditorPage extends Page {
                 </div>
               </div>
 
-              <aside className="GauntletEditor-side">{this.settings(quiz)}</aside>
+              <aside className="BrainstormEditor-side">{this.settings(quiz)}</aside>
             </div>
           </div>
         ) : null}
@@ -202,18 +202,18 @@ export default class EditorPage extends Page {
   }
 
   question(q: EditableQuestion, i: number): Mithril.Children {
-    const id = `gauntlet-q-${q.key}`;
+    const id = `brainstorm-q-${q.key}`;
 
     return (
-      <li className="GauntletEditor-question" key={q.key}>
-        <div className="GauntletEditor-questionHead">
-          <span className="GauntletEditor-handle" aria-label={text('drag', { number: i + 1 })} {...this.sorter.handle(i)}>
+      <li className="BrainstormEditor-question" key={q.key}>
+        <div className="BrainstormEditor-questionHead">
+          <span className="BrainstormEditor-handle" aria-label={text('drag', { number: i + 1 })} {...this.sorter.handle(i)}>
             <Icon name="fas fa-grip-vertical" />
           </span>
-          <span className="GauntletEditor-number">{i + 1}</span>
-          <span className="GauntletEditor-summary">{q.body.split('\n')[0] || text('untitled')}</span>
+          <span className="BrainstormEditor-number">{i + 1}</span>
+          <span className="BrainstormEditor-summary">{q.body.split('\n')[0] || text('untitled')}</span>
           <Select
-            className="GauntletEditor-type"
+            className="BrainstormEditor-type"
             aria-label={text('type')}
             value={q.type}
             options={Object.fromEntries(TYPES.map((type) => [type, text('types.' + type)]))}
@@ -236,7 +236,7 @@ export default class EditorPage extends Page {
           />
         </div>
 
-        <div className="GauntletEditor-questionBody">
+        <div className="BrainstormEditor-questionBody">
           <label className="sr-only" for={id}>
             {t('question')}
           </label>
@@ -250,7 +250,7 @@ export default class EditorPage extends Page {
             oninput={(e: InputEvent) => (q.body = (e.target as HTMLTextAreaElement).value)}
           />
 
-          <div className="GauntletEditor-image">
+          <div className="BrainstormEditor-image">
             <input
               className="FormControl"
               type="url"
@@ -267,13 +267,13 @@ export default class EditorPage extends Page {
             ) : null}
           </div>
           {q.imageUrl && /^(https?:\/\/|\/(?![\/\\]))/i.test(q.imageUrl) ? (
-            <img className="GauntletEditor-preview" src={q.imageUrl} alt="" loading="lazy" referrerpolicy="no-referrer" />
+            <img className="BrainstormEditor-preview" src={q.imageUrl} alt="" loading="lazy" referrerpolicy="no-referrer" />
           ) : null}
 
           {this.answers(q)}
 
-          <div className="GauntletEditor-row">
-            <label className="GauntletEditor-points">
+          <div className="BrainstormEditor-row">
+            <label className="BrainstormEditor-points">
               {t('points')}
               <input
                 className="FormControl"
@@ -286,7 +286,7 @@ export default class EditorPage extends Page {
             </label>
           </div>
 
-          <label className="GauntletEditor-explanationLabel" for={id + '-why'}>
+          <label className="BrainstormEditor-explanationLabel" for={id + '-why'}>
             {t('explanation')}
           </label>
           <textarea
@@ -308,7 +308,7 @@ export default class EditorPage extends Page {
       const isTrue = !!q.options.find((o) => o.id === 'true')?.correct;
 
       return (
-        <div className="GauntletEditor-boolean" role="radiogroup" aria-label={text('correct_answer')}>
+        <div className="BrainstormEditor-boolean" role="radiogroup" aria-label={text('correct_answer')}>
           {[true, false].map((value) => (
             <Button
               className={'Button' + (isTrue === value ? ' Button--primary' : '')}
@@ -319,7 +319,7 @@ export default class EditorPage extends Page {
                 this.dirty = true;
               }}
             >
-              {app.translator.trans(`ernestdefoe-gauntlet.forum.player.${value ? 'true' : 'false'}`)}
+              {app.translator.trans(`ernestdefoe-brainstorm.forum.player.${value ? 'true' : 'false'}`)}
             </Button>
           ))}
         </div>
@@ -330,12 +330,12 @@ export default class EditorPage extends Page {
     const max = typed ? 20 : 10;
 
     return (
-      <div className="GauntletEditor-options">
+      <div className="BrainstormEditor-options">
         <p className="helpText">{t(typed ? 'accepted_help' : q.type === 'multiple' ? 'multiple_help' : 'single_help')}</p>
         {q.options.map((o, i) => (
-          <div className={'GauntletEditor-option' + (o.correct && !typed ? ' is-correct' : '')}>
+          <div className={'BrainstormEditor-option' + (o.correct && !typed ? ' is-correct' : '')}>
             {typed ? (
-              <Icon name="fas fa-check" className="GauntletEditor-acceptIcon" />
+              <Icon name="fas fa-check" className="BrainstormEditor-acceptIcon" />
             ) : (
               <input
                 type={q.type === 'multiple' ? 'checkbox' : 'radio'}
@@ -392,12 +392,12 @@ export default class EditorPage extends Page {
     const setLimit = (m: number, s: number) => (quiz.timeLimit = m * 60 + s > 0 ? m * 60 + s : null);
 
     return (
-      <div className="GauntletEditor-settings">
-        <h3 className="GauntletEditor-section">{t('settings')}</h3>
+      <div className="BrainstormEditor-settings">
+        <h3 className="BrainstormEditor-section">{t('settings')}</h3>
 
         <div className="Form-group">
           <label>{t('time_limit')}</label>
-          <div className="GauntletEditor-time">
+          <div className="BrainstormEditor-time">
             <input
               className="FormControl"
               type="number"
@@ -450,17 +450,17 @@ export default class EditorPage extends Page {
         </div>
 
         <div className="Form-group">
-          <label for="gauntlet-opens">{t('opens_at')}</label>
+          <label for="brainstorm-opens">{t('opens_at')}</label>
           <input
-            id="gauntlet-opens"
+            id="brainstorm-opens"
             className="FormControl"
             type="datetime-local"
             value={toLocalInput(quiz.opensAt)}
             oninput={(e: InputEvent) => (quiz.opensAt = fromLocalInput((e.target as HTMLInputElement).value))}
           />
-          <label for="gauntlet-closes">{t('closes_at')}</label>
+          <label for="brainstorm-closes">{t('closes_at')}</label>
           <input
-            id="gauntlet-closes"
+            id="brainstorm-closes"
             className="FormControl"
             type="datetime-local"
             value={toLocalInput(quiz.closesAt)}
@@ -469,7 +469,7 @@ export default class EditorPage extends Page {
         </div>
 
         {meta.canReward && (meta.points || meta.badges) ? (
-          <fieldset className="GauntletEditor-rewards">
+          <fieldset className="BrainstormEditor-rewards">
             <legend>{t('rewards')}</legend>
             <p className="helpText">{t('rewards_help')}</p>
             {meta.points ? this.number(quiz, 'rewardPoints', -100000, 100000, 'reward_points', false) : null}
@@ -487,12 +487,12 @@ export default class EditorPage extends Page {
         ) : null}
 
         {this.error ? (
-          <p className="GauntletEditor-error" role="alert">
+          <p className="BrainstormEditor-error" role="alert">
             {this.error}
           </p>
         ) : null}
 
-        <div className="GauntletEditor-actions">
+        <div className="BrainstormEditor-actions">
           <Button className="Button" loading={this.saving} onclick={() => this.save('draft')}>
             {t(quiz.status === 'published' ? 'unpublish' : 'save_draft')}
           </Button>
@@ -512,7 +512,7 @@ export default class EditorPage extends Page {
     label: string,
     blankable: boolean
   ): Mithril.Children {
-    const id = 'gauntlet-' + field;
+    const id = 'brainstorm-' + field;
 
     return (
       <div className="Form-group">
@@ -539,7 +539,7 @@ export default class EditorPage extends Page {
     this.quiz!.questions.push(blankQuestion(type));
     this.dirty = true;
     // Straight into the new question.
-    setTimeout(() => (document.querySelector('.GauntletEditor-question:last-child textarea') as HTMLTextAreaElement | null)?.focus(), 0);
+    setTimeout(() => (document.querySelector('.BrainstormEditor-question:last-child textarea') as HTMLTextAreaElement | null)?.focus(), 0);
   }
 
   duplicate(i: number) {
@@ -585,7 +585,7 @@ export default class EditorPage extends Page {
         app.alerts.show({ type: 'success' }, t(status === 'published' ? 'published' : 'saved'));
 
         if (!this.id) {
-          m.route.set(app.route('gauntlet.edit', { id: data.id }));
+          m.route.set(app.route('brainstorm.edit', { id: data.id }));
           return;
         }
 

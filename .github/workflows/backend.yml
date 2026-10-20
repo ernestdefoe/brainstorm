@@ -1,4 +1,4 @@
-name: Gauntlet PHP
+name: Brainstorm PHP
 
 on: [workflow_dispatch, push, pull_request]
 

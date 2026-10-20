@@ -7,8 +7,8 @@ use Flarum\Group\Group;
 // manage them. Attaching badges and points stays with admins (who hold every
 // permission): a reward is the forum's to give, not a quiz author's.
 return Migration::addPermissions([
-    'gauntlet.view' => Group::GUEST_ID,
-    'gauntlet.take' => Group::MEMBER_ID,
-    'gauntlet.create' => Group::MODERATOR_ID,
-    'gauntlet.manage' => Group::MODERATOR_ID,
+    'brainstorm.view' => Group::GUEST_ID,
+    'brainstorm.take' => Group::MEMBER_ID,
+    'brainstorm.create' => Group::MODERATOR_ID,
+    'brainstorm.manage' => Group::MODERATOR_ID,
 ]);

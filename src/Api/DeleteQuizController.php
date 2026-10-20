@@ -1,6 +1,6 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet\Api;
+namespace ErnestDefoe\Brainstorm\Api;
 
 use Flarum\Http\RequestUtil;
 use Laminas\Diactoros\Response\EmptyResponse;

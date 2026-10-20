@@ -1,9 +1,9 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet\Api;
+namespace ErnestDefoe\Brainstorm\Api;
 
-use ErnestDefoe\Gauntlet\Access;
-use ErnestDefoe\Gauntlet\Rewards;
+use ErnestDefoe\Brainstorm\Access;
+use ErnestDefoe\Brainstorm\Rewards;
 use Flarum\Http\RequestUtil;
 use Flarum\User\Exception\PermissionDeniedException;
 use Illuminate\Database\ConnectionInterface;

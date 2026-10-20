@@ -1,10 +1,10 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet\Api;
+namespace ErnestDefoe\Brainstorm\Api;
 
-use ErnestDefoe\Gauntlet\Access;
-use ErnestDefoe\Gauntlet\Presenter;
-use ErnestDefoe\Gauntlet\Quiz;
+use ErnestDefoe\Brainstorm\Access;
+use ErnestDefoe\Brainstorm\Presenter;
+use ErnestDefoe\Brainstorm\Quiz;
 use Flarum\Http\RequestUtil;
 use Illuminate\Support\Arr;
 use Laminas\Diactoros\Response\JsonResponse;

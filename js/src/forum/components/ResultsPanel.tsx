@@ -10,7 +10,7 @@ import type { Person, Quiz, Result } from '../../common/api';
 import { clock, percent } from '../../common/format';
 import personLink from './PersonLink';
 
-const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-gauntlet.forum.results.${key}`, params);
+const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-brainstorm.forum.results.${key}`, params);
 
 type Row = Result & { user: Person | null; submittedAt: string };
 
@@ -55,18 +55,18 @@ export default class ResultsPanel extends Component<{ quiz: Quiz }> {
 
   view(): Mithril.Children {
     return (
-      <div className="GauntletResults">
+      <div className="BrainstormResults">
         {this.stats.length ? (
           <section>
             <h4>{t('questions')}</h4>
-            <ol className="GauntletResults-questions">
+            <ol className="BrainstormResults-questions">
               {this.stats.map((s) => (
                 <li>
-                  <span className="GauntletResults-question">{s.text}</span>
-                  <span className="GauntletResults-bar" title={extractText(t('asked', { count: s.asked }))}>
+                  <span className="BrainstormResults-question">{s.text}</span>
+                  <span className="BrainstormResults-bar" title={extractText(t('asked', { count: s.asked }))}>
                     <span style={{ width: s.correct + '%' }} />
                   </span>
-                  <span className="GauntletResults-value">{s.asked ? percent(s.correct) : '—'}</span>
+                  <span className="BrainstormResults-value">{s.asked ? percent(s.correct) : '—'}</span>
                 </li>
               ))}
             </ol>
@@ -76,12 +76,12 @@ export default class ResultsPanel extends Component<{ quiz: Quiz }> {
         <section>
           <h4>{t('attempts')}</h4>
           {this.rows.length ? (
-            <ul className="GauntletResults-attempts">
+            <ul className="BrainstormResults-attempts">
               {this.rows.map((r) => (
                 <li className={r.passed ? 'is-passed' : ''}>
                   {r.user ? personLink(r.user) : <span>{t('deleted_user')}</span>}
-                  <span className="GauntletResults-value">{percent(r.percent)}</span>
-                  <span className="GauntletResults-meta">
+                  <span className="BrainstormResults-value">{percent(r.percent)}</span>
+                  <span className="BrainstormResults-meta">
                     {clock(r.duration)} · {humanTime(new Date(r.submittedAt))}
                     {r.practice ? ' · ' + extractText(t('practice')) : ''}
                     {r.expired ? ' · ' + extractText(t('expired')) : ''}
@@ -99,7 +99,7 @@ export default class ResultsPanel extends Component<{ quiz: Quiz }> {
               ))}
             </ul>
           ) : !this.loading ? (
-            <p className="GauntletBoard-empty">{t('none')}</p>
+            <p className="BrainstormBoard-empty">{t('none')}</p>
           ) : null}
           {this.loading ? <LoadingIndicator display="block" size="small" /> : null}
           {!this.loading && this.next ? (

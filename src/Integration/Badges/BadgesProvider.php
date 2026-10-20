@@ -1,8 +1,8 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet\Integration\Badges;
+namespace ErnestDefoe\Brainstorm\Integration\Badges;
 
-use ErnestDefoe\Gauntlet\Event\AttemptFinished;
+use ErnestDefoe\Brainstorm\Event\AttemptFinished;
 use Flarum\Foundation\AbstractServiceProvider;
 use FoF\Badges\BadgeAwarder;
 use FoF\Badges\Trigger\MetricManager;
@@ -10,10 +10,10 @@ use FoF\Badges\Trigger\TriggerEvaluator;
 use Illuminate\Contracts\Events\Dispatcher;
 
 /**
- * Gauntlet's two triggers in FoF Badges, and the listener that evaluates them.
+ * Brainstorm's two triggers in FoF Badges, and the listener that evaluates them.
  *
  * 🚨 FoF Badges' own listener only recognises the events it knows, so
- * Gauntlet asks the evaluator itself — the same two calls that listener makes.
+ * Brainstorm asks the evaluator itself — the same two calls that listener makes.
  *
  * Registered from extend.php only when fof-badges is enabled.
  */

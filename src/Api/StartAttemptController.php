@@ -1,12 +1,12 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet\Api;
+namespace ErnestDefoe\Brainstorm\Api;
 
 use Carbon\Carbon;
-use ErnestDefoe\Gauntlet\Access;
-use ErnestDefoe\Gauntlet\Attempt;
-use ErnestDefoe\Gauntlet\Attempts;
-use ErnestDefoe\Gauntlet\Presenter;
+use ErnestDefoe\Brainstorm\Access;
+use ErnestDefoe\Brainstorm\Attempt;
+use ErnestDefoe\Brainstorm\Attempts;
+use ErnestDefoe\Brainstorm\Presenter;
 use Flarum\Foundation\ValidationException;
 use Flarum\Http\RequestUtil;
 use Flarum\User\Exception\PermissionDeniedException;
@@ -44,7 +44,7 @@ class StartAttemptController implements RequestHandlerInterface
         // Unlimited-attempt quizzes can't become a way to fill the table.
         if (Attempt::query()->where('user_id', $actor->id)->where('started_at', '>', Carbon::now()->subMinutes(10))->count() >= self::BURST
             && ! $this->attempts->open($quiz, $actor)) {
-            throw new ValidationException(['attempt' => $this->translator->trans('ernestdefoe-gauntlet.api.slow_down')]);
+            throw new ValidationException(['attempt' => $this->translator->trans('ernestdefoe-brainstorm.api.slow_down')]);
         }
 
         $attempt = $this->attempts->start($quiz, $actor, Access::canEdit($actor, $quiz));

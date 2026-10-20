@@ -1,8 +1,8 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet\Integration\Onramp;
+namespace ErnestDefoe\Brainstorm\Integration\Onramp;
 
-use ErnestDefoe\Gauntlet\Event\AttemptFinished;
+use ErnestDefoe\Brainstorm\Event\AttemptFinished;
 use ErnestDefoe\Onramp\StepType\StepType;
 use Flarum\User\User;
 use Illuminate\Database\ConnectionInterface;
@@ -21,7 +21,7 @@ class PassQuizzesStep extends StepType
 
     public function key(): string
     {
-        return 'gauntlet.passed';
+        return 'brainstorm.passed';
     }
 
     public function icon(): string
@@ -41,7 +41,7 @@ class PassQuizzesStep extends StepType
 
     public function extension(): ?string
     {
-        return 'ernestdefoe-gauntlet';
+        return 'ernestdefoe-brainstorm';
     }
 
     public function fields(): array

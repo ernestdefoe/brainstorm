@@ -23,16 +23,16 @@ export default class QuizCard extends Component<Attrs> {
     const embedded = this.attrs.embedded;
 
     return (
-      <article className={'GauntletCard' + (embedded ? ' GauntletCard--embedded' : '') + (this.playing ? ' is-playing' : '')}>
-        <header className="GauntletCard-header">
-          <span className="GauntletCard-icon" aria-hidden="true">
+      <article className={'BrainstormCard' + (embedded ? ' BrainstormCard--embedded' : '') + (this.playing ? ' is-playing' : '')}>
+        <header className="BrainstormCard-header">
+          <span className="BrainstormCard-icon" aria-hidden="true">
             <Icon name="fas fa-graduation-cap" />
           </span>
-          <div className="GauntletCard-heading">
-            <h3 className="GauntletCard-title">
+          <div className="BrainstormCard-heading">
+            <h3 className="BrainstormCard-title">
               <Link href={quizUrl(quiz)}>{quiz.title}</Link>
               {quiz.status === 'draft' ? (
-                <span className="GauntletChip GauntletChip--draft">{app.translator.trans('ernestdefoe-gauntlet.forum.draft')}</span>
+                <span className="BrainstormChip BrainstormChip--draft">{app.translator.trans('ernestdefoe-brainstorm.forum.draft')}</span>
               ) : null}
             </h3>
             {quizFacts(quiz)}
@@ -49,8 +49,8 @@ export default class QuizCard extends Component<Attrs> {
           />
         ) : (
           [
-            embedded && quiz.descriptionHtml ? <div className="GauntletCard-description Post-body">{m.trust(quiz.descriptionHtml)}</div> : null,
-            <footer className="GauntletCard-footer">
+            embedded && quiz.descriptionHtml ? <div className="BrainstormCard-description Post-body">{m.trust(quiz.descriptionHtml)}</div> : null,
+            <footer className="BrainstormCard-footer">
               {quizStanding(quiz)}
               {quizAction(quiz, embedded ? () => (this.playing = true) : undefined)}
             </footer>,

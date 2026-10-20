@@ -1,6 +1,6 @@
 <?php
 
-namespace ErnestDefoe\Gauntlet\Tests\integration\api;
+namespace ErnestDefoe\Brainstorm\Tests\integration\api;
 
 use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
@@ -15,15 +15,15 @@ class RewardsTest extends TestCase
     {
         parent::setUp();
 
-        $this->extension('fof-badges', 'ernestdefoe-gauntlet');
+        $this->extension('fof-badges', 'ernestdefoe-brainstorm');
 
         $this->prepareDatabase([
             User::class => [$this->normalUser()],
             'fof_badges' => [
                 ['id' => 1, 'name' => 'Cartographer', 'slug' => 'cartographer', 'icon' => 'fas fa-map', 'is_active' => 1, 'is_visible' => 1],
-                // A trigger badge on Gauntlet's own metric: one quiz passed.
+                // A trigger badge on Brainstorm's own metric: one quiz passed.
                 ['id' => 2, 'name' => 'Quizzer', 'slug' => 'quizzer', 'icon' => 'fas fa-star', 'is_active' => 1, 'is_visible' => 1,
-                    'trigger_config' => json_encode(['conditions' => [['metric' => 'gauntlet_quizzes_passed', 'operator' => '>=', 'value' => 1]]])],
+                    'trigger_config' => json_encode(['conditions' => [['metric' => 'brainstorm_quizzes_passed', 'operator' => '>=', 'value' => 1]]])],
             ],
         ]);
     }
