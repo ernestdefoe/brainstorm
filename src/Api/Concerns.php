@@ -1,0 +1,36 @@
+<?php
+
+namespace ErnestDefoe\Gauntlet\Api;
+
+use ErnestDefoe\Gauntlet\Access;
+use ErnestDefoe\Gauntlet\Quiz;
+use Flarum\User\Exception\PermissionDeniedException;
+use Flarum\User\User;
+use Illuminate\Support\Arr;
+use Psr\Http\Message\ServerRequestInterface;
+
+/** The two lookups every controller starts with. */
+trait Concerns
+{
+    protected function routeId(ServerRequestInterface $request, string $name = 'id'): int
+    {
+        return (int) Arr::get($request->getAttributes(), 'routeParameters.'.$name);
+    }
+
+    /** A quiz the actor may see, or a 404 — the same answer whether it is missing or hidden. */
+    protected function visibleQuiz(ServerRequestInterface $request, User $actor): Quiz
+    {
+        return Quiz::query()->visibleTo($actor)->with('user')->findOrFail($this->routeId($request));
+    }
+
+    protected function editableQuiz(ServerRequestInterface $request, User $actor): Quiz
+    {
+        $quiz = $this->visibleQuiz($request, $actor);
+
+        if (! Access::canEdit($actor, $quiz)) {
+            throw new PermissionDeniedException();
+        }
+
+        return $quiz;
+    }
+}
