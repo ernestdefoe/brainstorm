@@ -211,7 +211,12 @@ export default class EditorPage extends Page {
             <Icon name="fas fa-grip-vertical" />
           </span>
           <span className="BrainstormEditor-number">{i + 1}</span>
-          <span className="BrainstormEditor-summary">{q.body.split('\n')[0] || text('untitled')}</span>
+          <span className="BrainstormEditor-summary">
+            {q.body
+              .split('\n')[0]
+              .replace(/[*_`~#>[\]]/g, '')
+              .trim() || text('untitled')}
+          </span>
           <Select
             className="BrainstormEditor-type"
             aria-label={text('type')}

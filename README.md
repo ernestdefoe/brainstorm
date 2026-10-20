@@ -4,6 +4,8 @@
 
 Quizzes and knowledge tests for your community. Write a quiz once, play it on its own page or right inside a discussion, and reward the members who pass it.
 
+![A quiz on its own page, on the default Flarum theme](.github/screenshots/quiz-page.png)
+
 ## Features
 
 - **Four kinds of question:** one right answer, several right answers, true or false, and typed answers (matched without fussing over case, accents, spacing or surrounding punctuation). Any question can carry an image and an explanation.
@@ -19,6 +21,22 @@ Quizzes and knowledge tests for your community. Write a quiz once, play it on it
 - **Practice runs:** authors and moderators can try any quiz, drafts included. Those runs never appear on leaderboards and never earn rewards.
 - **A widget** showing the top quiz takers or the newest quizzes, for [Bespoke](https://ernestdefoe.online), [FoF Forum Widgets](https://github.com/FriendsOfFlarum/forum-widgets-core) and Page Builder.
 - Translatable throughout, works in light and dark mode, and adds about 4 KB (gzipped) to the JavaScript every page loads. Everything else loads only on the pages that use it.
+
+## Screenshots
+
+| Playing, against the clock | The marked attempt |
+| --- | --- |
+| ![A question with its countdown](.github/screenshots/player.png) | ![The result, with the answers shown](.github/screenshots/result.png) |
+
+| A quiz inside a post | The editor |
+| --- | --- |
+| ![A quiz embedded in a discussion](.github/screenshots/embed.png) | ![Writing a quiz](.github/screenshots/editor.png) |
+
+| How each question went | On a phone |
+| --- | --- |
+| ![Results for the quiz's author](.github/screenshots/results.png) | <img src=".github/screenshots/phone.png" width="300" alt="Playing on a phone"> |
+
+<sub>The Eiffel Tower photo in the screenshots is by Benh LIEU SONG, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/), via Wikimedia Commons.</sub>
 
 ## Installation
 

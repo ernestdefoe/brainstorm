@@ -141,6 +141,18 @@ export default class Player extends Component<Attrs> {
     this.saver = window.setTimeout(() => this.save(), SAVE_AFTER);
   }
 
+  /**
+   * Read from the current answer, not the list drawn at the last redraw:
+   * two quick ticks before a redraw must both count.
+   */
+  toggle(q: PaperQuestion, id: string, multiple: boolean) {
+    if (!multiple) return this.set(q, id);
+
+    const now = this.answers[q.id];
+    const chosen: string[] = Array.isArray(now) ? now : [];
+    this.set(q, chosen.includes(id) ? chosen.filter((x) => x !== id) : [...chosen, id]);
+  }
+
   save() {
     if (!this.dirty || !this.paper || this.saving || this.phase === 'result' || this.phase === 'submitting') return;
     this.dirty = false;
@@ -305,13 +317,7 @@ export default class Player extends Component<Attrs> {
 
             return (
               <label className={'BrainstormOption' + (on ? ' is-chosen' : '')} key={o.id}>
-                <input
-                  type={multiple ? 'checkbox' : 'radio'}
-                  name={name}
-                  value={o.id}
-                  checked={on}
-                  onchange={() => this.set(q, multiple ? (on ? chosen.filter((id) => id !== o.id) : [...chosen, o.id]) : o.id)}
-                />
+                <input type={multiple ? 'checkbox' : 'radio'} name={name} value={o.id} checked={on} onchange={() => this.toggle(q, o.id, multiple)} />
                 <span className="BrainstormOption-mark" aria-hidden="true" />
                 <span className="BrainstormOption-text">{q.type === 'boolean' ? t(o.id === 'true' ? 'true' : 'false') : o.text}</span>
               </label>
