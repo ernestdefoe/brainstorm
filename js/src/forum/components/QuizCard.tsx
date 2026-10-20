@@ -7,6 +7,7 @@ import { quizUrl } from '../../common/api';
 import type { Quiz, Result } from '../../common/api';
 import quizFacts from './QuizFacts';
 import Player from './Player';
+import prose from '../../common/prose';
 import { quizAction, quizStanding, recordFinish } from './QuizActions';
 
 interface Attrs {
@@ -41,6 +42,7 @@ export default class QuizCard extends Component<Attrs> {
 
         {this.playing ? (
           <Player
+            inPost={embedded}
             quiz={quiz}
             onfinish={(r: Result) => recordFinish(quiz, r)}
             onclose={() => {
@@ -49,7 +51,9 @@ export default class QuizCard extends Component<Attrs> {
           />
         ) : (
           [
-            embedded && quiz.descriptionHtml ? <div className="BrainstormCard-description Post-body">{m.trust(quiz.descriptionHtml)}</div> : null,
+            embedded && quiz.descriptionHtml ? (
+              <div className={prose('BrainstormCard-description', true)}>{m.trust(quiz.descriptionHtml)}</div>
+            ) : null,
             <footer className="BrainstormCard-footer">
               {quizStanding(quiz)}
               {quizAction(quiz, embedded ? () => (this.playing = true) : undefined)}

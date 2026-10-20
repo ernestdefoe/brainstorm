@@ -9,6 +9,7 @@ import { saveAnswers, showAttempt, startAttempt, submitAttempt } from '../../com
 import type { Answer, Paper, PaperQuestion, Quiz, Result } from '../../common/api';
 import { clock } from '../../common/format';
 import ResultView from './ResultView';
+import prose from '../../common/prose';
 
 const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-brainstorm.forum.player.${key}`, params);
 const text = (key: string, params: Record<string, unknown> = {}) => extractText(t(key, params));
@@ -22,6 +23,8 @@ interface Attrs {
   resultId?: number;
   onfinish?: (result: Result) => void;
   onclose?: () => void;
+  /** Shown inside a post (see common/prose). */
+  inPost?: boolean;
 }
 
 /**
@@ -232,7 +235,13 @@ export default class Player extends Component<Attrs> {
     if (this.phase === 'result') {
       return (
         <div className="BrainstormPlayer">
-          <ResultView result={this.result!} quiz={this.attrs.quiz} onretry={() => this.begin()} onclose={this.attrs.onclose} />
+          <ResultView
+            inPost={this.attrs.inPost}
+            result={this.result!}
+            quiz={this.attrs.quiz}
+            onretry={() => this.begin()}
+            onclose={this.attrs.onclose}
+          />
         </div>
       );
     }
@@ -329,7 +338,7 @@ export default class Player extends Component<Attrs> {
 
     return (
       <div className="BrainstormQuestion" key={q.id}>
-        <div className="BrainstormQuestion-body Post-body" id={name}>
+        <div className={prose('BrainstormQuestion-body', this.attrs.inPost)} id={name}>
           {q.bodyHtml ? m.trust(q.bodyHtml) : null}
         </div>
         {q.imageUrl ? (

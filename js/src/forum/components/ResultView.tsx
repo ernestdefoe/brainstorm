@@ -5,6 +5,7 @@ import Icon from 'flarum/common/components/Icon';
 import type Mithril from 'mithril';
 import type { Quiz, Result, ReviewQuestion } from '../../common/api';
 import { clock, percent } from '../../common/format';
+import prose from '../../common/prose';
 
 const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-brainstorm.forum.result.${key}`, params);
 
@@ -13,6 +14,7 @@ interface Attrs {
   quiz: Quiz;
   onretry?: () => void;
   onclose?: () => void;
+  inPost?: boolean;
 }
 
 /** A marked attempt: the score, pass or not, and as much of the marking as the quiz shows. */
@@ -76,7 +78,7 @@ export default class ResultView extends Component<Attrs> {
             {t(state, { earned: q.earned, points: q.points })}
           </span>
         </div>
-        <div className="BrainstormReview-body Post-body">{q.bodyHtml ? m.trust(q.bodyHtml) : null}</div>
+        <div className={prose('BrainstormReview-body', this.attrs.inPost)}>{q.bodyHtml ? m.trust(q.bodyHtml) : null}</div>
         {q.imageUrl ? (
           <img className="BrainstormQuestion-image" src={q.imageUrl} alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
         ) : null}
@@ -111,7 +113,7 @@ export default class ResultView extends Component<Attrs> {
           </ul>
         )}
 
-        {q.explanationHtml ? <div className="BrainstormReview-explanation Post-body">{m.trust(q.explanationHtml)}</div> : null}
+        {q.explanationHtml ? <div className={prose('BrainstormReview-explanation', this.attrs.inPost)}>{m.trust(q.explanationHtml)}</div> : null}
       </li>
     );
   }
