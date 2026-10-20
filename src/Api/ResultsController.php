@@ -90,6 +90,7 @@ class ResultsController implements RequestHandlerInterface
         $quizId = $quiz->id;
         $partial = $quiz->partial_credit;
         $questions = Question::query()->where('quiz_id', $quizId)->orderBy('position')->get()->keyBy('id');
+        $this->rich->prime([$quiz], $questions->pluck('body'));
         $asked = $earned = [];
 
         Attempt::query()->where('quiz_id', $quizId)->whereNotNull('submitted_at')->where('practice', false)

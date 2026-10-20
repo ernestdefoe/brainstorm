@@ -4,6 +4,8 @@ namespace ErnestDefoe\Gauntlet;
 
 use Flarum\Formatter\Formatter;
 use Flarum\User\User;
+use Illuminate\Database\Eloquent\Collection;
+use s9e\TextFormatter\Utils;
 
 /**
  * A quiz's description, its questions and their explanations go through the
@@ -38,6 +40,52 @@ class RichText
         } catch (\Throwable) {
             // Never let a formatter hiccup take the page down: show the text.
             return '<p>'.nl2br(e(strip_tags($stored))).'</p>';
+        }
+    }
+
+    /**
+     * flarum/mentions looks up the members, posts, groups and tags a text
+     * mentions when it is rendered: one query per text, unless its context
+     * already carries them. Rendering a page of quizzes, or a paper of
+     * questions, is many texts — so every mention in all of them is looked
+     * up here, once per kind, and handed to each quiz. Nothing is queried
+     * when nothing is mentioned.
+     *
+     * @param iterable<Quiz> $quizzes
+     * @param iterable<string|null> $texts the stored XML about to be rendered
+     */
+    public function prime(iterable $quizzes, iterable $texts): void
+    {
+        $kinds = [
+            'USERMENTION' => ['mentionsUsers', User::class, []],
+            'POSTMENTION' => ['mentionsPosts', 'Flarum\Post\Post', ['user', 'discussion']],
+            'GROUPMENTION' => ['mentionsGroups', 'Flarum\Group\Group', []],
+            'TAGMENTION' => ['mentionsTags', 'Flarum\Tags\Tag', []],
+        ];
+
+        $ids = [];
+        foreach ($texts as $xml) {
+            if ($xml !== null && str_contains($xml, 'MENTION')) {
+                foreach ($kinds as $tag => $kind) {
+                    foreach (Utils::getAttributeValues($xml, $tag, 'id') as $id) {
+                        $ids[$tag][$id] = true;
+                    }
+                }
+            }
+        }
+
+        foreach ($ids as $tag => $found) {
+            [$relation, $class, $with] = $kinds[$tag];
+            if (! class_exists($class)) {
+                continue;
+            }
+
+            /** @var Collection<int, \Flarum\Database\AbstractModel> $models */
+            $models = $class::query()->with($with)->findMany(array_keys($found));
+
+            foreach ($quizzes as $quiz) {
+                $quiz->setRelation($relation, $models);
+            }
         }
     }
 

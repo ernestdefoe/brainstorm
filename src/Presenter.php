@@ -54,6 +54,7 @@ class Presenter
         }
 
         $badges = $this->badges($quizzes->pluck('reward_badge_id')->filter()->unique()->all());
+        $this->rich->prime($quizzes, $quizzes->pluck('description'));
 
         return $quizzes->map(function (Quiz $quiz) use ($actor, $used, $open, $bests, $badges) {
             $best = $bests[$quiz->id] ?? null;
@@ -155,6 +156,7 @@ class Presenter
     {
         $quiz = $attempt->quiz;
         $questions = Question::query()->whereIn('id', $attempt->questionIds())->get()->keyBy('id');
+        $this->rich->prime([$quiz], $questions->pluck('body'));
         $slots = [];
 
         foreach ($attempt->layout as $slot) {
@@ -215,6 +217,7 @@ class Presenter
         $review = null;
         if ($marks) {
             $questions = Question::query()->whereIn('id', $attempt->questionIds())->get()->keyBy('id');
+            $this->rich->prime([$quiz], $questions->pluck('body')->merge($key ? $questions->pluck('explanation') : []));
             $review = [];
 
             foreach ($attempt->layout as $slot) {
