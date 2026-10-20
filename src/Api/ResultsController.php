@@ -6,9 +6,12 @@ use ErnestDefoe\Gauntlet\Attempt;
 use ErnestDefoe\Gauntlet\Attempts;
 use ErnestDefoe\Gauntlet\Presenter;
 use ErnestDefoe\Gauntlet\Question;
+use ErnestDefoe\Gauntlet\Quiz;
+use ErnestDefoe\Gauntlet\RichText;
 use ErnestDefoe\Gauntlet\Scorer;
 use Flarum\Http\RequestUtil;
 use Flarum\User\User;
+use Illuminate\Support\Str;
 use Laminas\Diactoros\Response\EmptyResponse;
 use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ResponseInterface;
@@ -31,7 +34,7 @@ class ResultsController implements RequestHandlerInterface
     /** Question statistics are taken from at most this many recent attempts. */
     public const SAMPLE = 1000;
 
-    public function __construct(private Presenter $presenter, private Attempts $attempts)
+    public function __construct(private Presenter $presenter, private Attempts $attempts, private RichText $rich)
     {
     }
 
@@ -71,7 +74,7 @@ class ResultsController implements RequestHandlerInterface
             'data' => $attempts,
             'meta' => [
                 'next' => $page->count() > self::PAGE ? $offset + self::PAGE : null,
-                'questions' => $offset ? null : $this->questionStats($quiz->id, $quiz->partial_credit),
+                'questions' => $offset ? null : $this->questionStats($quiz),
             ],
         ]);
     }
@@ -80,10 +83,12 @@ class ResultsController implements RequestHandlerInterface
      * How often each question was answered right, from recent attempts,
      * marked by the same scorer that marked them.
      *
-     * @return list<array{id: int, asked: int, correct: float}>
+     * @return list<array{id: int, text: string, asked: int, correct: float}>
      */
-    private function questionStats(int $quizId, bool $partial): array
+    private function questionStats(Quiz $quiz): array
     {
+        $quizId = $quiz->id;
+        $partial = $quiz->partial_credit;
         $questions = Question::query()->where('quiz_id', $quizId)->orderBy('position')->get()->keyBy('id');
         $asked = $earned = [];
 
@@ -101,6 +106,8 @@ class ResultsController implements RequestHandlerInterface
 
         return $questions->map(fn (Question $q) => [
             'id' => $q->id,
+            // The question as plain words, to label its row.
+            'text' => Str::limit(trim((string) preg_replace('/\s+/u', ' ', strip_tags((string) $this->rich->html($q->body, $quiz)))), 120),
             'asked' => $asked[$q->id] ?? 0,
             'correct' => isset($asked[$q->id]) ? round($earned[$q->id] / $asked[$q->id] * 100, 1) : 0.0,
         ])->values()->all();

@@ -1,12 +1,12 @@
 import app from 'flarum/forum/app';
 import Page from 'flarum/common/components/Page';
 import PageStructure from 'flarum/forum/components/PageStructure';
+import IndexSidebar from 'flarum/forum/components/IndexSidebar';
 import Button from 'flarum/common/components/Button';
 import Icon from 'flarum/common/components/Icon';
 import Switch from 'flarum/common/components/Switch';
 import Select from 'flarum/common/components/Select';
 import LinkButton from 'flarum/common/components/LinkButton';
-import ConfirmDocumentUnload from 'flarum/common/components/ConfirmDocumentUnload';
 import extractText from 'flarum/common/utils/extractText';
 import type Mithril from 'mithril';
 import { editorMeta, quizUrl, saveQuiz, showQuiz } from '../../common/api';
@@ -119,64 +119,77 @@ export default class EditorPage extends Page {
     }
   }
 
+  /** Leaving the page (closing, reloading) with unsaved changes asks first. */
+  unload = (e: BeforeUnloadEvent) => {
+    if (this.dirty) e.preventDefault();
+  };
+
+  oncreate(vnode: Mithril.VnodeDOM) {
+    super.oncreate(vnode);
+    window.addEventListener('beforeunload', this.unload);
+  }
+
+  onremove(vnode: Mithril.VnodeDOM) {
+    super.onremove(vnode);
+    window.removeEventListener('beforeunload', this.unload);
+  }
+
   view(): Mithril.Children {
     const quiz = this.quiz;
 
     return (
-      <PageStructure className="GauntletEditorPage" loading={!quiz || !this.meta}>
+      <PageStructure className="GauntletEditorPage" sidebar={() => <IndexSidebar />} loading={!quiz || !this.meta}>
         {quiz && this.meta ? (
-          <ConfirmDocumentUnload when={() => this.dirty}>
-            <div className="GauntletEditor" oninput={() => (this.dirty = true)} onchange={() => (this.dirty = true)}>
-              <div className="GauntletEditor-head">
-                <h2>{t(this.id ? 'edit_title' : 'new_title')}</h2>
-                {this.id ? (
-                  <LinkButton className="Button" icon="fas fa-eye" href={quizUrl({ id: this.id, slug: this.slug })}>
-                    {t('view')}
-                  </LinkButton>
-                ) : null}
-              </div>
+          <div className="GauntletEditor" oninput={() => (this.dirty = true)} onchange={() => (this.dirty = true)}>
+            <div className="GauntletEditor-head">
+              <h2>{t(this.id ? 'edit_title' : 'new_title')}</h2>
+              {this.id ? (
+                <LinkButton className="Button" icon="fas fa-eye" href={quizUrl({ id: this.id, slug: this.slug })}>
+                  {t('view')}
+                </LinkButton>
+              ) : null}
+            </div>
 
-              <div className="GauntletEditor-layout">
-                <div className="GauntletEditor-main">
-                  <div className="Form-group">
-                    <label for="gauntlet-title">{t('title')}</label>
-                    <input
-                      id="gauntlet-title"
-                      className="FormControl"
-                      maxlength={200}
-                      value={quiz.title}
-                      oninput={(e: InputEvent) => (quiz.title = (e.target as HTMLInputElement).value)}
-                    />
-                  </div>
-                  <div className="Form-group">
-                    <label for="gauntlet-description">{t('description')}</label>
-                    <textarea
-                      id="gauntlet-description"
-                      className="FormControl"
-                      rows={3}
-                      value={quiz.description}
-                      oninput={(e: InputEvent) => (quiz.description = (e.target as HTMLTextAreaElement).value)}
-                    />
-                    <p className="helpText">{t('formatting_help')}</p>
-                  </div>
-
-                  <h3 className="GauntletEditor-section">{t('questions', { count: quiz.questions.length })}</h3>
-                  <ol className="GauntletEditor-questions" data-sortable>
-                    {quiz.questions.map((q, i) => this.question(q, i))}
-                  </ol>
-                  <div className="GauntletEditor-add">
-                    {TYPES.map((type) => (
-                      <Button className="Button" icon="fas fa-plus" onclick={() => this.add(type)}>
-                        {t('types.' + type)}
-                      </Button>
-                    ))}
-                  </div>
+            <div className="GauntletEditor-layout">
+              <div className="GauntletEditor-main">
+                <div className="Form-group">
+                  <label for="gauntlet-title">{t('title')}</label>
+                  <input
+                    id="gauntlet-title"
+                    className="FormControl"
+                    maxlength={200}
+                    value={quiz.title}
+                    oninput={(e: InputEvent) => (quiz.title = (e.target as HTMLInputElement).value)}
+                  />
+                </div>
+                <div className="Form-group">
+                  <label for="gauntlet-description">{t('description')}</label>
+                  <textarea
+                    id="gauntlet-description"
+                    className="FormControl"
+                    rows={3}
+                    value={quiz.description}
+                    oninput={(e: InputEvent) => (quiz.description = (e.target as HTMLTextAreaElement).value)}
+                  />
+                  <p className="helpText">{t('formatting_help')}</p>
                 </div>
 
-                <aside className="GauntletEditor-side">{this.settings(quiz)}</aside>
+                <h3 className="GauntletEditor-section">{t('questions', { count: quiz.questions.length })}</h3>
+                <ol className="GauntletEditor-questions" data-sortable>
+                  {quiz.questions.map((q, i) => this.question(q, i))}
+                </ol>
+                <div className="GauntletEditor-add">
+                  {TYPES.map((type) => (
+                    <Button className="Button" icon="fas fa-plus" onclick={() => this.add(type)}>
+                      {t('types.' + type)}
+                    </Button>
+                  ))}
+                </div>
               </div>
+
+              <aside className="GauntletEditor-side">{this.settings(quiz)}</aside>
             </div>
-          </ConfirmDocumentUnload>
+          </div>
         ) : null}
       </PageStructure>
     );
@@ -508,7 +521,7 @@ export default class EditorPage extends Page {
           value={quiz[field] ?? ''}
           oninput={(e: InputEvent) => {
             const raw = (e.target as HTMLInputElement).value;
-            (quiz as any)[field] = raw === '' ? (blankable ? null : 0) : Number(raw);
+            (quiz as any)[field] = raw === '' ? (blankable ? null : 0) : Math.max(min, Math.min(max, Math.round(Number(raw)) || 0));
           }}
         />
         <p className="helpText">{t(label + '_help')}</p>

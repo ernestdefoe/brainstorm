@@ -5,7 +5,7 @@ import LoadingIndicator from 'flarum/common/components/LoadingIndicator';
 import extractText from 'flarum/common/utils/extractText';
 import humanTime from 'flarum/common/helpers/humanTime';
 import type Mithril from 'mithril';
-import { resetMember, results, showQuiz } from '../../common/api';
+import { resetMember, results } from '../../common/api';
 import type { Person, Quiz, Result } from '../../common/api';
 import { clock, percent } from '../../common/format';
 import personLink from './PersonLink';
@@ -21,20 +21,13 @@ type Row = Result & { user: Person | null; submittedAt: string };
  */
 export default class ResultsPanel extends Component<{ quiz: Quiz }> {
   rows: Row[] = [];
-  stats: { id: number; asked: number; correct: number }[] = [];
-  labels: Record<number, string> = {};
+  stats: { id: number; text: string; asked: number; correct: number }[] = [];
   next: number | null = null;
   loading = true;
 
   oninit(vnode: Mithril.Vnode<{ quiz: Quiz }, this>) {
     super.oninit(vnode);
     this.load(0);
-
-    // The questions' own text, to label the statistics.
-    showQuiz(this.attrs.quiz.id, true).then(({ data }) => {
-      data.edit?.questions.forEach((q) => (this.labels[q.id!] = q.body.replace(/\s+/g, ' ').slice(0, 120)));
-      m.redraw();
-    });
   }
 
   load(offset: number) {
@@ -63,7 +56,7 @@ export default class ResultsPanel extends Component<{ quiz: Quiz }> {
             <ol className="GauntletResults-questions">
               {this.stats.map((s) => (
                 <li>
-                  <span className="GauntletResults-question">{this.labels[s.id] || '…'}</span>
+                  <span className="GauntletResults-question">{s.text}</span>
                   <span className="GauntletResults-bar" title={extractText(t('asked', { count: s.asked }))}>
                     <span style={{ width: s.correct + '%' }} />
                   </span>

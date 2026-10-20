@@ -744,14 +744,6 @@
   flex-wrap: wrap;
   gap: 8px;
 }
-.GauntletEditor-side {
-  position: sticky;
-  top: calc(var(--header-height, 52px) + 12px);
-
-  @media @phone {
-    position: static;
-  }
-}
 .GauntletEditor-settings {
   .Form-group {
     margin-bottom: 14px;
@@ -789,6 +781,7 @@
 }
 .GauntletEditor-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
 }
@@ -898,4 +891,31 @@
 }
 .GauntletWidget-more {
   padding-left: 0;
+}
+
+// Inside a post the card sits in .Post-body, whose headings, links and lists
+// are styled for prose. The card keeps its own look there.
+.Post-body .GauntletEmbed {
+  margin: 10px 0;
+
+  .GauntletCard-title {
+    font-size: 16px;
+    margin: 0 0 4px;
+  }
+  a {
+    text-decoration: none;
+  }
+  .GauntletReview,
+  .GauntletReview-options {
+    list-style: none;
+    padding: 0;
+  }
+  .GauntletReview-options {
+    margin: 0;
+  }
+  .GauntletResult-text p,
+  .GauntletOptions-hint,
+  .GauntletQuestion-points {
+    margin-top: 0;
+  }
 }

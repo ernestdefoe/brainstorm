@@ -189,7 +189,7 @@ export const leaderboard = (quizId?: number, limit?: number) =>
 export const results = (quizId: number, offset = 0) =>
   call<{
     data: (Result & { user: Person | null; submittedAt: string })[];
-    meta: { next: number | null; questions: { id: number; asked: number; correct: number }[] | null };
+    meta: { next: number | null; questions: { id: number; text: string; asked: number; correct: number }[] | null };
   }>('GET', `/quizzes/${quizId}/results`, undefined, offset ? { offset } : undefined);
 export const resetMember = (quizId: number, userId: number) => call<void>('DELETE', `/quizzes/${quizId}/results/${userId}`);
 

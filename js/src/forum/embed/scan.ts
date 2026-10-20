@@ -41,6 +41,9 @@ export default function scan(root: Element | undefined): void {
   root.querySelectorAll<HTMLAnchorElement>('.Post-body a[href*="/quizzes/"]:not([data-gauntlet])').forEach((a) => {
     a.setAttribute('data-gauntlet', '');
 
+    // Never a link inside a quiz already shown: the card's own title links to its quiz.
+    if (a.closest('.GauntletEmbed')) return;
+
     const id = idOf(a);
     const parent = a.parentElement;
     if (!id || !parent || parent.classList.contains('Post-body')) return;
