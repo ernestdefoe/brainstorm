@@ -14,6 +14,7 @@ use ErnestDefoe\Gauntlet\Event\AttemptFinished;
 use ErnestDefoe\Gauntlet\Integration\Badges\BadgesProvider;
 use ErnestDefoe\Gauntlet\Integration\Onramp\PassQuizzesStep;
 use ErnestDefoe\Gauntlet\Listener\PayRewards;
+use ErnestDefoe\Gauntlet\Widget\QuizzesBlock;
 use ErnestDefoe\Gauntlet\Access;
 use Flarum\Api\Context;
 use Flarum\Api\Resource\ForumResource;
@@ -92,5 +93,8 @@ return [
         ])
         ->whenExtensionEnabled('ernestdefoe-onramp', fn () => [
             (new \ErnestDefoe\Onramp\Extend\StepTypes())->add(PassQuizzesStep::class),
+        ])
+        ->whenExtensionEnabled('ernestdefoe-page-builder', fn () => [
+            new \Ernestdefoe\PageBuilder\Extend\PageBuilderBlock(QuizzesBlock::class),
         ]),
 ];

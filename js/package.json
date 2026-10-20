@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@ernestdefoe/onramp",
+  "name": "@ernestdefoe/gauntlet",
   "version": "0.1.0",
   "devDependencies": {
     "@flarum/prettier-config": "^1.0.0",

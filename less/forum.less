@@ -1,0 +1,901 @@
+// Gauntlet. Built on the forum's own colour variables, so it follows the
+// theme, its primary colour and dark mode without settings of its own.
+
+@g-gap: 12px;
+@g-radius: 10px;
+
+.GauntletChip {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  vertical-align: middle;
+  background: var(--control-bg);
+  color: var(--control-color);
+
+  &--draft {
+    background: var(--alert-bg);
+    color: var(--alert-color);
+  }
+}
+
+.GauntletEmpty,
+.GauntletBoard-empty {
+  color: var(--muted-color);
+  text-align: center;
+  padding: 24px 0;
+}
+
+// The facts line under a quiz's title.
+.GauntletFacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 13px;
+  color: var(--muted-color);
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+}
+.GauntletFacts-reward {
+  color: var(--text-color);
+  font-weight: 600;
+}
+.GauntletBadgeIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 10px;
+}
+
+// A quiz: in the list, in a post, and on its own page.
+.GauntletCard {
+  border: 1px solid var(--control-bg);
+  border-radius: @g-radius;
+  background: var(--body-bg);
+  padding: 16px;
+  margin-bottom: @g-gap;
+
+  &--embedded {
+    margin: 10px 0;
+    max-width: 680px;
+  }
+}
+.GauntletEmbed {
+  display: block;
+}
+.GauntletCard-header {
+  display: flex;
+  gap: @g-gap;
+  align-items: flex-start;
+}
+.GauntletCard-icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--primary-color);
+  color: var(--body-bg);
+  font-size: 18px;
+}
+.GauntletCard-heading {
+  min-width: 0;
+  flex: 1;
+}
+.GauntletCard-title {
+  margin: 0 0 4px;
+  font-size: 16px;
+  line-height: 1.3;
+
+  a {
+    color: var(--heading-color);
+  }
+}
+.GauntletCard-description {
+  margin-top: @g-gap;
+  font-size: 14px;
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+}
+.GauntletCard-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: @g-gap;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.GauntletCard-standing {
+  font-size: 13px;
+  color: var(--muted-color);
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+
+  &.is-passed {
+    color: var(--control-success-color);
+    font-weight: 600;
+  }
+}
+.GauntletCard-note {
+  font-size: 13px;
+  color: var(--muted-color);
+}
+
+// Playing.
+.GauntletPlayer {
+  margin-top: 14px;
+
+  &--error {
+    text-align: center;
+    color: var(--muted-color);
+  }
+}
+.GauntletPlayer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: var(--muted-color);
+}
+.GauntletPlayer-count {
+  font-weight: 600;
+}
+.GauntletPlayer-timer {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--text-color);
+
+  &.is-low {
+    color: var(--error-color);
+  }
+}
+.GauntletPlayer-progress {
+  flex: 1 0 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--control-bg);
+  overflow: hidden;
+
+  > span {
+    display: block;
+    height: 100%;
+    background: var(--primary-color);
+    transition: width 0.2s;
+  }
+}
+.GauntletQuestion-body {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: @g-gap;
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+}
+.GauntletQuestion-image {
+  display: block;
+  max-width: 100%;
+  max-height: 360px;
+  border-radius: 8px;
+  margin: 0 0 @g-gap;
+}
+.GauntletQuestion-points {
+  font-size: 12px;
+  color: var(--muted-color);
+  margin: -4px 0 10px;
+}
+.GauntletOptions {
+  display: grid;
+  gap: 8px;
+}
+.GauntletOptions-hint {
+  font-size: 13px;
+  color: var(--muted-color);
+  margin: 0;
+}
+.GauntletOption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border: 2px solid var(--control-bg);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: normal;
+  transition: border-color 0.15s, background 0.15s;
+
+  // The real input stays in the page for keyboards and screen readers.
+  input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+  &:hover {
+    background: var(--control-bg);
+  }
+  &:focus-within {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+  }
+  &.is-chosen {
+    border-color: var(--primary-color);
+    background: var(--control-bg);
+  }
+}
+.GauntletOption-mark {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--muted-color);
+  border-radius: 50%;
+
+  [type='checkbox'] + & {
+    border-radius: 4px;
+  }
+  .is-chosen & {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    box-shadow: inset 0 0 0 3px var(--body-bg);
+  }
+}
+.GauntletOption-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.GauntletPlayer-text {
+  max-width: 420px;
+}
+.GauntletPlayer-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: @g-gap;
+  margin-top: 16px;
+}
+.GauntletPlayer-review {
+  padding: 8px 0;
+}
+.GauntletDots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+.GauntletDot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--control-bg);
+  background: var(--body-bg);
+  color: var(--muted-color);
+  font-size: 12px;
+  cursor: pointer;
+
+  &.is-answered {
+    background: var(--control-bg);
+    color: var(--text-color);
+  }
+  &.is-current {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    font-weight: 700;
+  }
+}
+
+// A marked attempt.
+.GauntletResult-summary {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.GauntletResult-ring {
+  --gauntlet-ring: 0%;
+  --gauntlet-tone: var(--error-color);
+  flex: none;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(var(--gauntlet-tone) var(--gauntlet-ring), var(--control-bg) 0);
+
+  > span {
+    display: grid;
+    place-items: center;
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: var(--body-bg);
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .is-passed & {
+    --gauntlet-tone: var(--control-success-color);
+  }
+}
+.GauntletResult-text {
+  flex: 1;
+  min-width: 220px;
+
+  p {
+    margin: 0 0 4px;
+  }
+}
+.GauntletResult-headline {
+  margin: 0 0 6px;
+  font-size: 18px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  .is-passed & .icon {
+    color: var(--control-success-color);
+  }
+  .is-failed & .icon {
+    color: var(--error-color);
+  }
+}
+.GauntletResult-note {
+  font-size: 13px;
+  color: var(--muted-color);
+}
+.GauntletResult-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.GauntletReview {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 0;
+}
+.GauntletReview-item {
+  border-left: 3px solid var(--error-color);
+  padding: 4px 0 4px 14px;
+  margin-bottom: 18px;
+
+  &.is-right {
+    border-color: var(--control-success-color);
+  }
+  &.is-partial {
+    border-color: var(--alert-color);
+  }
+}
+.GauntletReview-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--muted-color);
+  margin-bottom: 4px;
+}
+.GauntletReview-number {
+  font-weight: 700;
+}
+.GauntletReview-state {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+}
+.GauntletReview-body {
+  font-weight: 600;
+  margin-bottom: 8px;
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+}
+.GauntletReview-options {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.GauntletReview-option {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 3px 0;
+  color: var(--muted-color);
+
+  &.is-chosen {
+    color: var(--text-color);
+  }
+  &.is-correct {
+    color: var(--control-success-color);
+    font-weight: 600;
+  }
+  &.is-wrong {
+    color: var(--error-color);
+  }
+}
+.GauntletReview-yours {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--control-bg);
+  color: var(--control-color);
+}
+.GauntletReview-explanation {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--control-bg);
+  font-size: 14px;
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+}
+
+// Leaderboards.
+.GauntletBoard-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.GauntletBoard-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--control-bg);
+
+  &.is-me {
+    font-weight: 700;
+  }
+  .GauntletPerson {
+    flex: 1;
+    min-width: 0;
+  }
+}
+.GauntletBoard-rank {
+  width: 24px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--muted-color);
+
+  .is-top-1 & {
+    color: #d4a017;
+  }
+  .is-top-2 & {
+    color: #9aa4ad;
+  }
+  .is-top-3 & {
+    color: #b8733e;
+  }
+}
+.GauntletBoard-value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.GauntletBoard-extra {
+  min-width: 56px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--muted-color);
+  font-variant-numeric: tabular-nums;
+}
+.GauntletBoard-me {
+  font-size: 13px;
+  margin: 8px 0 0;
+  color: var(--muted-color);
+}
+.GauntletPerson {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-color);
+
+  .Avatar {
+    --size: 24px;
+    flex: none;
+  }
+}
+.GauntletPerson-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Pages.
+.GauntletIndexPage-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: @g-gap;
+  margin-bottom: 14px;
+}
+.GauntletIndexPage-title,
+.GauntletQuizPage-title {
+  margin: 0;
+  font-size: 22px;
+}
+.GauntletIndexPage-toolbar {
+  display: flex;
+  gap: @g-gap;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.GauntletIndexPage-search {
+  flex: 1;
+  min-width: 160px;
+  max-width: 280px;
+  margin-left: auto;
+}
+.GauntletTabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+
+  .Button.active {
+    background: var(--control-bg);
+    color: var(--text-color);
+    font-weight: 700;
+  }
+}
+.GauntletIndexPage-body,
+.GauntletQuizPage-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 24px;
+  align-items: start;
+
+  @media @phone {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.GauntletIndexPage-board,
+.GauntletQuizPage-side {
+  h3 {
+    margin-top: 0;
+    font-size: 14px;
+    text-transform: uppercase;
+    color: var(--muted-color);
+  }
+}
+.GauntletIndexPage-more {
+  display: block;
+  margin: 0 auto;
+}
+.GauntletQuizPage-back {
+  padding-left: 0;
+}
+.GauntletQuizPage-title {
+  margin-bottom: 6px;
+}
+.GauntletQuizPage-byline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--muted-color);
+  margin-bottom: 8px;
+}
+.GauntletQuizPage-window {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 8px 0 0;
+}
+.GauntletQuizPage-description {
+  margin: 14px 0;
+}
+.GauntletQuizPage-tools {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 14px 0;
+}
+.GauntletQuizPage-cta {
+  padding: 14px 16px;
+  border-radius: @g-radius;
+  background: var(--control-bg);
+}
+
+// The editor.
+.GauntletEditor-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: @g-gap;
+}
+.GauntletEditor-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 24px;
+  align-items: start;
+
+  @media @phone {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.GauntletEditor-section {
+  font-size: 15px;
+  margin: 20px 0 10px;
+}
+.GauntletEditor-questions {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.GauntletEditor-question {
+  border: 1px solid var(--control-bg);
+  border-radius: @g-radius;
+  background: var(--body-bg);
+  margin-bottom: @g-gap;
+
+  // Folded to their heads while a question is being dragged.
+  .is-sorting & .GauntletEditor-questionBody {
+    display: none;
+  }
+}
+.GauntletEditor-questionHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--control-bg);
+
+  .Select {
+    width: auto;
+  }
+}
+.GauntletEditor-handle {
+  cursor: grab;
+  touch-action: none;
+  padding: 4px;
+  color: var(--muted-color);
+
+  .is-sorting & {
+    cursor: grabbing;
+  }
+}
+.GauntletEditor-number {
+  font-weight: 700;
+}
+.GauntletEditor-summary {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted-color);
+}
+.GauntletEditor-questionBody {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+.GauntletEditor-image {
+  display: flex;
+  gap: 8px;
+}
+.GauntletEditor-preview {
+  max-width: 200px;
+  max-height: 120px;
+  border-radius: 6px;
+}
+.GauntletEditor-options .helpText {
+  margin: 0 0 6px;
+}
+.GauntletEditor-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+
+  > input[type='radio'],
+  > input[type='checkbox'] {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--control-success-color);
+  }
+  &.is-correct .FormControl {
+    border-color: var(--control-success-color);
+  }
+}
+.GauntletEditor-acceptIcon {
+  color: var(--control-success-color);
+  width: 18px;
+}
+.GauntletEditor-boolean {
+  display: flex;
+  gap: 8px;
+}
+.GauntletEditor-points {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: normal;
+
+  .FormControl {
+    width: 80px;
+  }
+}
+.GauntletEditor-explanationLabel {
+  font-size: 13px;
+  margin-bottom: -4px;
+}
+.GauntletEditor-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.GauntletEditor-side {
+  position: sticky;
+  top: calc(var(--header-height, 52px) + 12px);
+
+  @media @phone {
+    position: static;
+  }
+}
+.GauntletEditor-settings {
+  .Form-group {
+    margin-bottom: 14px;
+  }
+  .Switch {
+    margin-bottom: 10px;
+  }
+  label + .FormControl + label {
+    margin-top: 8px;
+  }
+}
+.GauntletEditor-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  .FormControl {
+    width: 72px;
+  }
+}
+.GauntletEditor-rewards {
+  border: 1px solid var(--control-bg);
+  border-radius: 8px;
+  padding: 10px 12px 0;
+  margin: 0 0 14px;
+
+  legend {
+    font-weight: 700;
+    padding: 0 4px;
+  }
+}
+.GauntletEditor-error {
+  color: var(--error-color);
+  font-weight: 600;
+}
+.GauntletEditor-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+// Staff results.
+.GauntletResults {
+  h4 {
+    font-size: 13px;
+    margin: 0 0 8px;
+  }
+  section + section {
+    margin-top: 18px;
+  }
+}
+.GauntletResults-questions,
+.GauntletResults-attempts {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 13px;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--control-bg);
+  }
+}
+.GauntletResults-question {
+  flex: 1 0 100%;
+}
+.GauntletResults-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--control-bg);
+  overflow: hidden;
+
+  > span {
+    display: block;
+    height: 100%;
+    background: var(--primary-color);
+  }
+}
+.GauntletResults-value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.GauntletResults-meta {
+  flex: 1 0 100%;
+  color: var(--muted-color);
+  font-size: 12px;
+}
+.GauntletResults-attempts {
+  .GauntletPerson {
+    flex: 1;
+    min-width: 0;
+  }
+  .is-passed .GauntletResults-value {
+    color: var(--control-success-color);
+  }
+}
+
+// The composer's quiz picker.
+.GauntletPicker-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+.GauntletPicker-item {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+
+  .Button-label {
+    display: flex;
+    flex-direction: column;
+  }
+}
+.GauntletPicker-meta {
+  font-size: 12px;
+  color: var(--muted-color);
+}
+
+// Widgets.
+.GauntletWidget-heading {
+  margin-top: 0;
+}
+.GauntletWidget-latest {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  li {
+    padding: 5px 0;
+    display: flex;
+    flex-direction: column;
+  }
+}
+.GauntletWidget-meta {
+  font-size: 12px;
+  color: var(--muted-color);
+}
+.GauntletWidget-more {
+  padding-left: 0;
+}

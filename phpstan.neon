@@ -11,9 +11,9 @@ parameters:
     paths:
         - extend.php
         - src
-    # Onramp is optional and not on Packagist: its two classes Gauntlet
-    # builds on are described for the analyser only.
+    # Onramp and Page Builder are optional and not on Packagist: the classes
+    # Gauntlet builds on are described for the analyser only.
     scanFiles:
-        - tests/phpstan/onramp.php
+        - tests/phpstan/optional-extensions.php
     databaseMigrationsPath:
         - migrations

@@ -1,0 +1,22 @@
+import app from 'flarum/forum/app';
+import Link from 'flarum/common/components/Link';
+import stringToColor from 'flarum/common/utils/stringToColor';
+import type { Person } from '../../common/api';
+
+/** A member's avatar and name, linking to their profile, from Gauntlet's plain user objects. */
+export default function PersonLink({ person, avatarOnly }: { person: Person; avatarOnly?: boolean }) {
+  const avatar = person.avatarUrl ? (
+    <img className="Avatar" src={person.avatarUrl} alt="" loading="lazy" decoding="async" />
+  ) : (
+    <span className="Avatar" style={{ '--avatar-bg': '#' + stringToColor(person.displayName) }}>
+      {person.displayName.charAt(0).toUpperCase()}
+    </span>
+  );
+
+  return (
+    <Link className="GauntletPerson" href={app.route('user', { username: person.slug })}>
+      {avatar}
+      {avatarOnly ? null : <span className="GauntletPerson-name">{person.displayName}</span>}
+    </Link>
+  );
+}
