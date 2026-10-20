@@ -9,7 +9,7 @@ import { percent } from '../../common/format';
 const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-gauntlet.forum.card.${key}`, params);
 
 /** "Best: 80%" with a tick once passed; empty before the first attempt. */
-export function QuizStanding({ quiz }: { quiz: Quiz }): any {
+export function quizStanding(quiz: Quiz): any {
   const best = quiz.me?.best;
   if (!best) return <span className="GauntletCard-standing" />;
 
@@ -25,7 +25,7 @@ export function QuizStanding({ quiz }: { quiz: Quiz }): any {
  * What the reader can do next: log in, start, resume, try again, or why not.
  * With `onplay` the quiz is played in place; without, the button goes to its page.
  */
-export function QuizAction({ quiz, onplay }: { quiz: Quiz; onplay?: () => void }): any {
+export function quizAction(quiz: Quiz, onplay?: () => void): any {
   const me = quiz.me;
 
   if (!app.session.user) {
@@ -61,11 +61,14 @@ export function QuizAction({ quiz, onplay }: { quiz: Quiz; onplay?: () => void }
 export function recordFinish(quiz: Quiz, result: Result): void {
   if (!quiz.me || result.practice) return;
 
+  const best = quiz.me.best;
+  quiz.attemptCount++;
+  if (result.passed && !best?.passed) quiz.passCount++;
+
   quiz.me.openAttemptId = null;
   quiz.me.attemptsUsed = result.attemptsUsed;
   quiz.me.attemptsLeft = result.attemptsLeft;
 
-  const best = quiz.me.best;
   if (!best || result.percent > best.percent || (result.percent === best.percent && result.duration < best.duration)) {
     quiz.me.best = { attemptId: result.id, percent: result.percent, duration: result.duration, passed: result.passed || !!best?.passed };
   } else if (result.passed) {

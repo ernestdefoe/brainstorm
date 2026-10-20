@@ -4,7 +4,7 @@ import stringToColor from 'flarum/common/utils/stringToColor';
 import type { Person } from '../../common/api';
 
 /** A member's avatar and name, linking to their profile, from Gauntlet's plain user objects. */
-export default function PersonLink({ person, avatarOnly }: { person: Person; avatarOnly?: boolean }) {
+export default function personLink(person: Person, avatarOnly = false): any {
   const avatar = person.avatarUrl ? (
     <img className="Avatar" src={person.avatarUrl} alt="" loading="lazy" decoding="async" />
   ) : (

@@ -5,9 +5,9 @@ import Link from 'flarum/common/components/Link';
 import type Mithril from 'mithril';
 import { quizUrl } from '../../common/api';
 import type { Quiz, Result } from '../../common/api';
-import QuizFacts from './QuizFacts';
+import quizFacts from './QuizFacts';
 import Player from './Player';
-import { QuizAction, QuizStanding, recordFinish } from './QuizActions';
+import { quizAction, quizStanding, recordFinish } from './QuizActions';
 
 interface Attrs {
   quiz: Quiz;
@@ -35,7 +35,7 @@ export default class QuizCard extends Component<Attrs> {
                 <span className="GauntletChip GauntletChip--draft">{app.translator.trans('ernestdefoe-gauntlet.forum.draft')}</span>
               ) : null}
             </h3>
-            <QuizFacts quiz={quiz} />
+            {quizFacts(quiz)}
           </div>
         </header>
 
@@ -45,8 +45,8 @@ export default class QuizCard extends Component<Attrs> {
           [
             embedded && quiz.descriptionHtml ? <div className="GauntletCard-description Post-body">{m.trust(quiz.descriptionHtml)}</div> : null,
             <footer className="GauntletCard-footer">
-              <QuizStanding quiz={quiz} />
-              <QuizAction quiz={quiz} onplay={embedded ? () => (this.playing = true) : undefined} />
+              {quizStanding(quiz)}
+              {quizAction(quiz, embedded ? () => (this.playing = true) : undefined)}
             </footer>,
           ]
         )}

@@ -9,12 +9,12 @@ import humanTime from 'flarum/common/helpers/humanTime';
 import type Mithril from 'mithril';
 import { deleteQuiz, showQuiz } from '../../common/api';
 import type { Quiz, Result } from '../../common/api';
-import { QuizAction, QuizStanding, recordFinish } from '../components/QuizActions';
-import QuizFacts from '../components/QuizFacts';
+import { quizAction, quizStanding, recordFinish } from '../components/QuizActions';
+import quizFacts from '../components/QuizFacts';
 import Player from '../components/Player';
 import Leaderboard from '../components/Leaderboard';
 import ResultsPanel from '../components/ResultsPanel';
-import PersonLink from '../components/PersonLink';
+import personLink from '../components/PersonLink';
 
 const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-gauntlet.forum.${key}`, params);
 
@@ -65,11 +65,11 @@ export default class QuizPage extends Page {
             {quiz.status === 'draft' ? <span className="GauntletChip GauntletChip--draft">{t('draft')}</span> : null}
           </h2>
           <div className="GauntletQuizPage-byline">
-            {quiz.author ? <PersonLink person={quiz.author} /> : null}
+            {quiz.author ? personLink(quiz.author) : null}
             {quiz.publishedAt ? humanTime(new Date(quiz.publishedAt)) : null}
             <span>{t('quiz.stats', { taken: quiz.attemptCount, passed: quiz.passCount })}</span>
           </div>
-          <QuizFacts quiz={quiz} />
+          {quizFacts(quiz)}
           {this.windowNote(quiz)}
           {quiz.descriptionHtml ? <div className="GauntletQuizPage-description Post-body">{m.trust(quiz.descriptionHtml)}</div> : null}
 
@@ -100,8 +100,8 @@ export default class QuizPage extends Page {
             </div>
           ) : (
             <div className="GauntletCard-footer GauntletQuizPage-cta">
-              <QuizStanding quiz={quiz} />
-              <QuizAction quiz={quiz} onplay={() => (this.playing = true)} />
+              {quizStanding(quiz)}
+              {quizAction(quiz, () => (this.playing = true))}
             </div>
           )}
         </div>
@@ -126,7 +126,7 @@ export default class QuizPage extends Page {
           {this.tab === 'results' && quiz.canEdit ? (
             <ResultsPanel quiz={quiz} />
           ) : quiz.leaderboard ? (
-            <Leaderboard key={this.boardKey} quizId={quiz.id} />
+            [<Leaderboard key={this.boardKey} quizId={quiz.id} />]
           ) : (
             <p className="GauntletBoard-empty">{t('leaderboard.off')}</p>
           )}

@@ -216,7 +216,7 @@ export default class Player extends Component<Attrs> {
           </div>
         </div>
 
-        {this.phase === 'review' ? this.reviewPanel(done, total) : this.question(paper.questions[this.index])}
+        {this.phase === 'review' ? this.reviewPanel(done, total) : [this.question(paper.questions[this.index])]}
 
         {this.dots()}
       </div>
@@ -254,7 +254,10 @@ export default class Player extends Component<Attrs> {
           placeholder={text('type_answer')}
           value={typeof value === 'string' ? value : ''}
           oninput={(e: InputEvent) => this.set(q, (e.target as HTMLInputElement).value)}
-          onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && this.forward(last)}
+          onkeydown={(e: KeyboardEvent) => {
+            // A block, not `&&`: a handler that returns false cancels the key in Mithril.
+            if (e.key === 'Enter') this.forward(last);
+          }}
         />
       );
     } else {

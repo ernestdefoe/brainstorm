@@ -5,7 +5,7 @@ import type Mithril from 'mithril';
 import { leaderboard } from '../../common/api';
 import type { Row, Standing } from '../../common/api';
 import { clock, percent } from '../../common/format';
-import PersonLink from './PersonLink';
+import personLink from './PersonLink';
 
 const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-gauntlet.forum.leaderboard.${key}`, params);
 
@@ -62,7 +62,7 @@ export default class Leaderboard extends Component<Attrs> {
                 className={'GauntletBoard-row' + (String(row.user.id) === myId ? ' is-me' : '') + (row.rank <= 3 ? ' is-top is-top-' + row.rank : '')}
               >
                 <span className="GauntletBoard-rank">{row.rank}</span>
-                <PersonLink person={row.user} />
+                {personLink(row.user)}
                 <span className="GauntletBoard-value">{perQuiz ? percent(row.percent!) : t('passed', { count: row.passed })}</span>
                 {this.attrs.compact ? null : (
                   <span className="GauntletBoard-extra">{perQuiz ? clock(row.duration!) : t('average', { score: percent(row.average!) })}</span>

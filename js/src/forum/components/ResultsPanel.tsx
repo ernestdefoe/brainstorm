@@ -8,7 +8,7 @@ import type Mithril from 'mithril';
 import { resetMember, results, showQuiz } from '../../common/api';
 import type { Person, Quiz, Result } from '../../common/api';
 import { clock, percent } from '../../common/format';
-import PersonLink from './PersonLink';
+import personLink from './PersonLink';
 
 const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-gauntlet.forum.results.${key}`, params);
 
@@ -80,7 +80,7 @@ export default class ResultsPanel extends Component<{ quiz: Quiz }> {
             <ul className="GauntletResults-attempts">
               {this.rows.map((r) => (
                 <li className={r.passed ? 'is-passed' : ''}>
-                  {r.user ? <PersonLink person={r.user} /> : <span>{t('deleted_user')}</span>}
+                  {r.user ? personLink(r.user) : <span>{t('deleted_user')}</span>}
                   <span className="GauntletResults-value">{percent(r.percent)}</span>
                   <span className="GauntletResults-meta">
                     {clock(r.duration)} · {humanTime(new Date(r.submittedAt))}

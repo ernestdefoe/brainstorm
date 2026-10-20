@@ -6,7 +6,7 @@ import { span } from '../../common/format';
 const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-gauntlet.forum.facts.${key}`, params);
 
 /** One line of what a quiz asks of you: questions, time, pass mark, attempts, rewards. */
-export default function QuizFacts({ quiz }: { quiz: Quiz }) {
+export default function quizFacts(quiz: Quiz): any {
   const me = quiz.me;
   const facts = [
     <span>
