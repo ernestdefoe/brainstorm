@@ -1,4 +1,5 @@
 import app from 'flarum/admin/app';
+import { registerEditorWidgets } from '../common/fofWidgets';
 
 /*
  * Brainstorm's admin is its permissions and one setting; quizzes themselves
@@ -19,4 +20,9 @@ app.initializers.add('ernestdefoe-brainstorm', () => {
     .registerPermission({ icon: 'fas fa-pen-to-square', label: t('permissions.create'), permission: 'brainstorm.create' }, 'start')
     .registerPermission({ icon: 'fas fa-graduation-cap', label: t('permissions.manage'), permission: 'brainstorm.manage' }, 'moderate')
     .registerPermission({ icon: 'fas fa-award', label: t('permissions.reward'), permission: 'brainstorm.reward' }, 'moderate');
+
+  // FoF's layout editor lists only widgets the admin registers too.
+  registerEditorWidgets(app, 'ernestdefoe-brainstorm', [
+    { key: 'brainstormQuizzes', icon: 'fas fa-graduation-cap', title: () => t('widgets.quizzes') },
+  ]);
 });

@@ -19,7 +19,7 @@ Quizzes and knowledge tests for your community. Write a quiz once, play it on it
 - **Onramp:** a "pass N quizzes" step for the [Onramp](https://github.com/ernestdefoe/onramp) onboarding checklist.
 - **Results for authors:** every finished attempt, how often each question is answered correctly, and a reset for any member's attempts.
 - **Practice runs:** authors and moderators can try any quiz, drafts included. Those runs never appear on leaderboards and never earn rewards.
-- **A widget** showing the top quiz takers or the newest quizzes, for [Bespoke](https://ernestdefoe.online), [FoF Forum Widgets](https://github.com/FriendsOfFlarum/forum-widgets-core) and Page Builder.
+- **A widget** showing the top quiz takers or the newest quizzes, for [Bespoke](https://ernestdefoe.online), [FoF Forum Widgets](https://github.com/FriendsOfFlarum/forum-widgets-core) and Page Builder. In FoF Forum Widgets, drag it into a section of the layout editor; it shows nowhere until you do.
 - Translatable throughout, works in light and dark mode, and adds about 4 KB (gzipped) to the JavaScript every page loads. Everything else loads only on the pages that use it.
 
 ## Screenshots

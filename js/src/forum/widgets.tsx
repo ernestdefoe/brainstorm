@@ -1,6 +1,7 @@
 import app from 'flarum/forum/app';
 import Component from 'flarum/common/Component';
 import type Mithril from 'mithril';
+import { fof, hasFofWidgets, placed } from '../common/fofWidgets';
 
 /**
  * Brainstorm's widget — the top quiz takers or the newest quizzes — offered to
@@ -41,11 +42,9 @@ export default function registerWidgets(): void {
   const flarum = flarumGlobal();
   const has = (id: string) => !!flarum?.extensions && id in flarum.extensions;
 
-  if (has('fof-forum-widgets-core')) {
-    const widgetsMod = flarum.reg?.get?.('fof-forum-widgets-core', 'common/extend/Widgets');
-    const widgetMod = flarum.reg?.get?.('fof-forum-widgets-core', 'common/components/Widget');
-    const Widgets = widgetsMod?.default ?? widgetsMod;
-    const WidgetBase = widgetMod?.default ?? widgetMod;
+  if (hasFofWidgets() && (app as any).widgets) {
+    const Widgets = fof('common/extend/Widgets');
+    const WidgetBase = fof('common/components/Widget');
 
     // A version whose internals moved: decline quietly rather than throw out
     // of an initializer and take the forum's JS down with it.
@@ -66,7 +65,16 @@ export default function registerWidgets(): void {
       }
 
       new Widgets()
-        .add({ key: 'brainstormQuizzes', component: FofQuizzesWidget, isDisabled: false, isUnique: true, placement: 'end', position: 1 })
+        .add({
+          key: 'brainstormQuizzes',
+          component: FofQuizzesWidget,
+          // 🚨 Opt-in: only where the admin placed it in FoF's layout editor,
+          // and only for a viewer who may see quizzes (see common/fofWidgets.ts).
+          isDisabled: () => !placed(app, 'ernestdefoe-brainstorm', 'brainstormQuizzes') || !app.forum.attribute('canViewQuizzes'),
+          isUnique: true,
+          placement: 'end',
+          position: 1,
+        })
         .extend(app, 'ernestdefoe-brainstorm');
     }
   }
