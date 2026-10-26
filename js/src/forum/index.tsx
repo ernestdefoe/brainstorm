@@ -48,10 +48,9 @@ app.initializers.add('ernestdefoe-brainstorm', () => {
         'quiz',
         <Button
           className="Button Button--ua-reset ComposerBody-quiz"
-          icon="fas fa-graduation-cap"
           onclick={() => app.modal.show(() => import('./components/QuizPickerModal'), { composer: this.composer })}
         >
-          {app.translator.trans('ernestdefoe-brainstorm.forum.composer.add')}
+          <span className="QuizLabel">{app.translator.trans('ernestdefoe-brainstorm.forum.composer.add')}</span>
         </Button>,
         1
       );
