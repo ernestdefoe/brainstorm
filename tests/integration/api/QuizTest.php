@@ -456,6 +456,21 @@ class QuizTest extends TestCase
     }
 
     #[Test]
+    public function a_writers_own_run_follows_the_reveal_setting(): void
+    {
+        // luceos, Discord 2026-10-29: answers set to show only once passed,
+        // yet his own failed test run showed every correct answer.
+        $quiz = $this->quiz(['reveal' => 'answers']);
+
+        $failed = $this->submit($this->start($quiz['id'], 1)['id'], [], 1);
+        $this->assertTrue($failed['practice']);
+        $this->assertFalse($failed['answersShown'], 'a failed run keeps the key hidden, as for members');
+
+        $passed = $this->submit($this->start($quiz['id'], 1)['id'], $this->key($quiz), 1);
+        $this->assertTrue($passed['answersShown'], 'a passed run reveals it, as for members');
+    }
+
+    #[Test]
     public function with_the_setting_on_a_writers_attempt_on_an_open_quiz_counts(): void
     {
         $this->setting('ernestdefoe-brainstorm.editors_count', '1');

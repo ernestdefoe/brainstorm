@@ -206,7 +206,9 @@ class Presenter
      * A marked attempt. How much of the marking shows follows the quiz's
      * reveal setting; the answer key only once the member can no longer
      * improve by trying again (passed, or out of attempts), unless the quiz
-     * reveals it every time. Anyone who may edit the quiz sees it all.
+     * reveals it every time. Anyone who may edit the quiz sees it all on
+     * other members' attempts; on their own runs they get exactly what a
+     * member would, so a test run shows what the reveal setting does.
      *
      * @return array<string, mixed>
      */
@@ -217,9 +219,10 @@ class Presenter
         $used = $mine->count();
         $open = $mine->contains(fn (Attempt $a) => $a->submitted_at === null);
         $passedEver = (bool) $this->db->table('quiz_bests')->where('quiz_id', $quiz->id)->where('user_id', $attempt->user_id)->value('passed');
-        $done = $passedEver || ($quiz->max_attempts && $used >= $quiz->max_attempts && ! $open);
+        // A practice run never reaches quiz_bests, so its own pass counts.
+        $done = $passedEver || ($attempt->practice && $attempt->passed) || ($quiz->max_attempts && $used >= $quiz->max_attempts && ! $open);
 
-        $editor = Access::canEdit($actor, $quiz);
+        $editor = (int) $attempt->user_id !== (int) $actor->id && Access::canEdit($actor, $quiz);
         $level = $editor ? 'answers_always' : $quiz->reveal;
         $marks = $level !== 'score';
         // 🚨 Never while the member has an attempt open: an earlier result

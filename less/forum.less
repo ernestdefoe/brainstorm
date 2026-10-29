@@ -748,8 +748,22 @@
   .Form-group {
     margin-bottom: 14px;
   }
-  .Switch {
-    margin-bottom: 10px;
+  // Core's toggle is taller than a line of text; without a min-height the
+  // rows overlap, and a wrapped label slides under the next toggle.
+  .Checkbox--switch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 28px;
+    margin-bottom: 12px;
+    line-height: 1.4;
+
+    .Checkbox-display {
+      flex-shrink: 0;
+    }
+  }
+  .Checkbox--switch + .helpText {
+    margin: -6px 0 14px;
   }
   label + .FormControl + label {
     margin-top: 8px;
