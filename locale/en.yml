@@ -204,7 +204,8 @@ ernestdefoe-brainstorm:
       unlimited: No limit
       shuffle_questions: Shuffle the questions
       shuffle_options: Shuffle the answers
-      partial_credit: Part marks for "several answers" questions
+      partial_credit: Partial credit on questions with several right answers
+      partial_credit_help: "Off: a question is right only when every right answer is picked and no wrong one. On: each right pick earns its share of the points and each wrong pick takes one share back, so ticking every box never pays."
       leaderboard: Leaderboard
       reveal: After an attempt, show
       reveals:

@@ -440,6 +440,7 @@ export default class EditorPage extends Page {
         <Switch state={quiz.partialCredit} onchange={(v: boolean) => (quiz.partialCredit = v)}>
           {t('partial_credit')}
         </Switch>
+        <p className="helpText">{t('partial_credit_help')}</p>
         <Switch state={quiz.leaderboard} onchange={(v: boolean) => (quiz.leaderboard = v)}>
           {t('leaderboard')}
         </Switch>
