@@ -15,6 +15,12 @@ app.initializers.add('ernestdefoe-brainstorm', () => {
       type: 'boolean',
       label: t('settings.show_nav'),
     })
+    .registerSetting({
+      setting: 'ernestdefoe-brainstorm.editors_count',
+      type: 'boolean',
+      label: t('settings.editors_count'),
+      help: t('settings.editors_count_help'),
+    })
     .registerPermission({ icon: 'fas fa-graduation-cap', label: t('permissions.view'), permission: 'brainstorm.view', allowGuest: true }, 'view')
     .registerPermission({ icon: 'fas fa-play', label: t('permissions.take'), permission: 'brainstorm.take' }, 'reply')
     .registerPermission({ icon: 'fas fa-pen-to-square', label: t('permissions.create'), permission: 'brainstorm.create' }, 'start')

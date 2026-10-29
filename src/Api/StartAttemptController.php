@@ -47,7 +47,7 @@ class StartAttemptController implements RequestHandlerInterface
             throw new ValidationException(['attempt' => $this->translator->trans('ernestdefoe-brainstorm.api.slow_down')]);
         }
 
-        $attempt = $this->attempts->start($quiz, $actor, Access::canEdit($actor, $quiz));
+        $attempt = $this->attempts->start($quiz, $actor, Access::practises($actor, $quiz));
 
         return new JsonResponse(['data' => $this->presenter->paper($attempt)]);
     }

@@ -128,7 +128,7 @@ class Attempts
         $overdue = $attempt->isOverdue();
         // Someone who could see the key by now (made an editor mid-attempt)
         // is practising, whatever they were when they started.
-        $practice = $attempt->practice || Access::canEdit($user, $quiz);
+        $practice = $attempt->practice || Access::practises($user, $quiz);
 
         if (! $overdue && $answers !== null) {
             $attempt->answers = $this->clean($attempt, $answers, $questions);

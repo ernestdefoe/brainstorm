@@ -456,6 +456,28 @@ class QuizTest extends TestCase
     }
 
     #[Test]
+    public function with_the_setting_on_a_writers_attempt_on_an_open_quiz_counts(): void
+    {
+        $this->setting('ernestdefoe-brainstorm.editors_count', '1');
+        $quiz = $this->quiz(['maxAttempts' => 1]);
+        $draft = $this->quiz(['status' => 'draft']);
+        $later = $this->quiz(['opensAt' => Carbon::now()->addDay()->toIso8601String()]);
+
+        $result = $this->submit($this->start($quiz['id'], 1)['id'], $this->key($quiz), 1);
+        $this->assertFalse($result['practice']);
+        $this->assertSame(1, $this->database()->table('quiz_bests')->where('user_id', 1)->count(), 'on the leaderboard');
+        $this->assertSame(1, (int) $this->database()->table('quizzes')->where('id', $quiz['id'])->value('attempt_count'));
+
+        [$status] = $this->json('POST', '/api/quizzes/'.$quiz['id'].'/attempts', 1);
+        $this->assertSame(422, $status, 'and the attempt limit applies');
+
+        // A draft, or a quiz not open yet, is still only a preview.
+        foreach ([$draft, $later] as $preview) {
+            $this->assertTrue($this->submit($this->start($preview['id'], 1)['id'], $this->key($preview), 1)['practice']);
+        }
+    }
+
+    #[Test]
     public function the_quiz_page_carries_its_title_for_link_previews_but_never_a_drafts(): void
     {
         $quiz = $this->quiz();

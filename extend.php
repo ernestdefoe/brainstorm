@@ -64,6 +64,7 @@ return [
 
     (new Extend\Settings())
         ->default('ernestdefoe-brainstorm.show_nav', true)
+        ->default('ernestdefoe-brainstorm.editors_count', false)
         ->serializeToForum('brainstormShowNav', 'ernestdefoe-brainstorm.show_nav', 'boolval'),
 
     // Both are permissions the actor's groups were already loaded for: no query.
