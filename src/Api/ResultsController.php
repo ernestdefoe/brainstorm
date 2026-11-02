@@ -93,14 +93,18 @@ class ResultsController implements RequestHandlerInterface
         $this->rich->prime([$quiz], $questions->pluck('body'));
         $asked = $earned = [];
 
+        // Raw rows, one at a time: up to SAMPLE attempts of up to 200
+        // questions each would otherwise be hydrated as models all at once.
         Attempt::query()->where('quiz_id', $quizId)->whereNotNull('submitted_at')->where('practice', false)
-            ->orderByDesc('id')->limit(self::SAMPLE)
-            ->get(['id', 'layout', 'answers'])
-            ->each(function (Attempt $a) use ($questions, $partial, &$asked, &$earned) {
-                foreach ($a->questionIds() as $id) {
+            ->orderByDesc('id')->limit(self::SAMPLE)->select(['layout', 'answers'])
+            ->toBase()->cursor()
+            ->each(function (object $row) use ($questions, $partial, &$asked, &$earned) {
+                $answers = json_decode((string) $row->answers, true) ?: [];
+                foreach (json_decode((string) $row->layout, true) ?: [] as $slot) {
+                    $id = (int) $slot['q'];
                     if ($q = $questions->get($id)) {
                         $asked[$id] = ($asked[$id] ?? 0) + 1;
-                        $earned[$id] = ($earned[$id] ?? 0) + Scorer::fraction($q, $a->answers[(string) $id] ?? null, $partial);
+                        $earned[$id] = ($earned[$id] ?? 0) + Scorer::fraction($q, $answers[(string) $id] ?? null, $partial);
                     }
                 }
             });

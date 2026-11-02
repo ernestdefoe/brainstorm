@@ -635,4 +635,40 @@ class QuizTest extends TestCase
             $this->assertSame(422, $status, $url);
         }
     }
+
+    #[Test]
+    public function a_bad_date_is_reported_on_the_field_that_carries_it(): void
+    {
+        foreach (['opensAt', 'closesAt'] as $field) {
+            [$status, $body, $raw] = $this->json('POST', '/api/quizzes', 1, ['data' => ['title' => 'Dates', $field => 'not a date']]);
+            $this->assertSame(422, $status, $raw);
+            $this->assertSame('/data/attributes/'.$field, $body['errors'][0]['source']['pointer'], $raw);
+        }
+    }
+
+    #[Test]
+    public function a_long_quiz_saves_in_one_insert_and_keeps_its_ids_on_edit(): void
+    {
+        $questions = [];
+        for ($i = 0; $i < 200; $i++) {
+            $questions[] = ['type' => 'boolean', 'body' => "Statement $i.", 'options' => [['id' => 'true', 'correct' => true]]];
+        }
+        $quiz = $this->quiz(['questions' => $questions]);
+        $saved = $quiz['edit']['questions'];
+        $this->assertCount(200, $saved);
+
+        // Drop the first, keep the rest in order, add one in the middle.
+        $edit = array_map(fn ($q) => ['id' => $q['id'], 'type' => 'boolean', 'body' => $q['body'], 'options' => $q['options']], array_slice($saved, 1));
+        array_splice($edit, 50, 0, [['type' => 'single', 'body' => 'New one?', 'options' => [['text' => 'Yes', 'correct' => true], ['text' => 'No']]]]);
+        [$status, , $raw] = $this->json('PATCH', '/api/quizzes/'.$quiz['id'], 1, ['data' => ['questions' => $edit]]);
+        $this->assertSame(200, $status, $raw);
+
+        $rows = $this->database()->table('quiz_questions')->where('quiz_id', $quiz['id'])->orderBy('position')->get();
+        $this->assertCount(200, $rows);
+        $this->assertSame(array_column(array_slice($saved, 1, 50), 'id'), $rows->take(50)->pluck('id')->map(fn ($id) => (int) $id)->all());
+        $this->assertSame('single', $rows[50]->type);
+        $this->assertSame(range(0, 199), $rows->pluck('position')->map(fn ($p) => (int) $p)->all());
+        $this->assertSame((int) $saved[199]['id'], (int) $rows[199]->id);
+        $this->assertSame(0, $this->database()->table('quiz_questions')->where('id', $saved[0]['id'])->count());
+    }
 }

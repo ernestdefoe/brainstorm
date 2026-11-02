@@ -58,8 +58,8 @@ class Saver
             $reveal = 'answers';
         }
 
-        $opensAt = $has('opensAt') ? $this->date(Arr::get($data, 'opensAt')) : $quiz->opens_at;
-        $closesAt = $has('closesAt') ? $this->date(Arr::get($data, 'closesAt')) : $quiz->closes_at;
+        $opensAt = $has('opensAt') ? $this->date(Arr::get($data, 'opensAt'), 'opensAt') : $quiz->opens_at;
+        $closesAt = $has('closesAt') ? $this->date(Arr::get($data, 'closesAt'), 'closesAt') : $quiz->closes_at;
         if ($opensAt && $closesAt && $closesAt->lte($opensAt)) {
             $this->fail('closesAt', 'dates');
         }
@@ -84,39 +84,13 @@ class Saver
             $quiz->opens_at = $opensAt;
             $quiz->closes_at = $closesAt;
 
-            foreach ([
-                'time_limit' => ['timeLimit', 10, 86400],
-                'max_attempts' => ['maxAttempts', 1, 1000],
-                'question_pick' => ['questionPick', 1, self::MAX_QUESTIONS],
-            ] as $column => [$key, $min, $max]) {
-                if ($has($key)) {
-                    $quiz->$column = $this->int($data, $key, $min, $max);
-                }
-            }
-            if ($has('passMark')) {
-                $quiz->pass_mark = $this->int($data, 'passMark', 0, 100) ?? 70;
-            }
-            foreach (['shuffle_questions' => ['shuffleQuestions', false], 'shuffle_options' => ['shuffleOptions', true], 'partial_credit' => ['partialCredit', false], 'leaderboard' => ['leaderboard', true]] as $column => [$key, $default]) {
-                if ($has($key)) {
-                    $quiz->$column = (bool) Arr::get($data, $key, $default);
-                }
-            }
+            $this->applySettings($quiz, $has, $data);
 
             if ($status === 'published' && ! $quiz->published_at) {
                 $quiz->published_at = Carbon::now();
             }
 
-            if (Access::canReward($actor)) {
-                if ($has('rewardPoints')) {
-                    $quiz->reward_points = $this->int($data, 'rewardPoints', -100000, 100000) ?? 0;
-                }
-                if ($has('rewardBadgeId')) {
-                    $quiz->reward_badge_id = $this->badge(Arr::get($data, 'rewardBadgeId'));
-                }
-            } elseif ($isNew) {
-                $quiz->reward_points = 0;
-                $quiz->reward_badge_id = null;
-            }
+            $this->applyRewards($quiz, $isNew, $has, $data, $actor);
 
             // A new quiz is saved first: the formatter is given it as context.
             if ($isNew) {
@@ -131,21 +105,77 @@ class Saver
                 $this->syncQuestions($quiz, $questions, $actor);
             }
 
-            /*
-             * 🚨 A quiz that pays a reward is marked the way the person who
-             * attached the reward saw it. Anyone without the reward permission
-             * may still fix its wording, but not its marking — a pass mark of 0
-             * or a rewritten key would pay whoever they sent to take it.
-             */
-            if ($before !== null && ! Access::canReward($actor) && ($quiz->reward_points || $quiz->reward_badge_id)
-                && $before !== $this->marking($quiz, Question::query()->where('quiz_id', $quiz->id)->get()->all())) {
-                $this->fail('questions', 'reward_locked');
+            if ($before !== null) {
+                $this->assertMarkingKept($quiz, $before, $actor);
             }
 
             $quiz->save();
 
             return $quiz;
         });
+    }
+
+    /**
+     * The optional settings, each clamped; only the keys sent are touched.
+     *
+     * @param callable(string): bool $has
+     * @param array<string, mixed> $data
+     */
+    private function applySettings(Quiz $quiz, callable $has, array $data): void
+    {
+        foreach ([
+            'time_limit' => ['timeLimit', 10, 86400],
+            'max_attempts' => ['maxAttempts', 1, 1000],
+            'question_pick' => ['questionPick', 1, self::MAX_QUESTIONS],
+        ] as $column => [$key, $min, $max]) {
+            if ($has($key)) {
+                $quiz->$column = $this->int($data, $key, $min, $max);
+            }
+        }
+        if ($has('passMark')) {
+            $quiz->pass_mark = $this->int($data, 'passMark', 0, 100) ?? 70;
+        }
+        foreach (['shuffle_questions' => ['shuffleQuestions', false], 'shuffle_options' => ['shuffleOptions', true], 'partial_credit' => ['partialCredit', false], 'leaderboard' => ['leaderboard', true]] as $column => [$key, $default]) {
+            if ($has($key)) {
+                $quiz->$column = (bool) Arr::get($data, $key, $default);
+            }
+        }
+    }
+
+    /**
+     * Rewards are only touched by actors who may attach them: for anyone
+     * else they keep whatever they were (and a new quiz starts with none).
+     *
+     * @param callable(string): bool $has
+     * @param array<string, mixed> $data
+     */
+    private function applyRewards(Quiz $quiz, bool $isNew, callable $has, array $data, User $actor): void
+    {
+        if (Access::canReward($actor)) {
+            if ($has('rewardPoints')) {
+                $quiz->reward_points = $this->int($data, 'rewardPoints', -100000, 100000) ?? 0;
+            }
+            if ($has('rewardBadgeId')) {
+                $quiz->reward_badge_id = $this->badge(Arr::get($data, 'rewardBadgeId'));
+            }
+        } elseif ($isNew) {
+            $quiz->reward_points = 0;
+            $quiz->reward_badge_id = null;
+        }
+    }
+
+    /**
+     * 🚨 A quiz that pays a reward is marked the way the person who attached
+     * the reward saw it. Anyone without the reward permission may still fix
+     * its wording, but not its marking — a pass mark of 0 or a rewritten key
+     * would pay whoever they sent to take it.
+     */
+    private function assertMarkingKept(Quiz $quiz, string $before, User $actor): void
+    {
+        if (! Access::canReward($actor) && ($quiz->reward_points || $quiz->reward_badge_id)
+            && $before !== $this->marking($quiz, Question::query()->where('quiz_id', $quiz->id)->get()->all())) {
+            $this->fail('questions', 'reward_locked');
+        }
     }
 
     /**
@@ -176,7 +206,7 @@ class Saver
     private function syncQuestions(Quiz $quiz, array $questions, User $actor): void
     {
         $existing = Question::query()->where('quiz_id', $quiz->id)->get()->keyBy('id');
-        $kept = [];
+        $kept = $new = $moved = [];
 
         foreach ($questions as $position => $q) {
             $question = isset($q['id']) ? $existing->get($q['id']) : null;
@@ -190,12 +220,31 @@ class Saver
             $question->points = $q['points'];
             $question->options = $q['options'];
             $question->explanation = $this->rich->store($q['explanation'], $quiz, $actor, 5000);
-            $question->save();
 
-            $kept[] = $question->id;
+            if ($question->exists) {
+                $kept[] = $question->id;
+                // Unchanged writes nothing; only moved goes into one update below.
+                if (array_keys($question->getDirty()) === ['position']) {
+                    $moved[(int) $question->id] = $position;
+                } else {
+                    $question->save();
+                }
+            } else {
+                // Cast attributes (options as JSON), inserted together below.
+                $new[] = $question->getAttributes();
+            }
         }
 
         Question::query()->where('quiz_id', $quiz->id)->whereNotIn('id', $kept ?: [0])->delete();
+        if ($moved) {
+            // Both sides are integers, so they are written into the CASE as they are.
+            $id = $this->db->getQueryGrammar()->wrap('id');
+            $case = 'CASE '.$id.implode('', array_map(fn ($qid, $pos) => ' WHEN '.(int) $qid.' THEN '.(int) $pos, array_keys($moved), $moved)).' END';
+            Question::query()->whereIn('id', array_keys($moved))->update(['position' => $this->db->raw($case)]);
+        }
+        if ($new) {
+            Question::query()->insert($new);
+        }
         $quiz->unsetRelation('questions');
     }
 
@@ -340,7 +389,7 @@ class Saver
         return max($min, min($max, (int) $value));
     }
 
-    private function date(mixed $value): ?Carbon
+    private function date(mixed $value, string $field): ?Carbon
     {
         if (! is_string($value) || $value === '') {
             return null;
@@ -349,7 +398,7 @@ class Saver
         try {
             return Carbon::parse($value)->utc();
         } catch (\Throwable) {
-            $this->fail('opensAt', 'dates');
+            $this->fail($field, 'dates');
         }
     }
 
