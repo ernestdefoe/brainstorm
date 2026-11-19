@@ -21,6 +21,7 @@ use ErnestDefoe\Brainstorm\Integration\Gamification\GamificationProvider;
 use ErnestDefoe\Brainstorm\Integration\Onramp\PassQuizzesStep;
 use ErnestDefoe\Brainstorm\Integration\Rewards\RewardsProvider;
 use ErnestDefoe\Brainstorm\Integration\Tags\TagMentionsProvider;
+use ErnestDefoe\Brainstorm\LeaderboardChoice;
 use ErnestDefoe\Brainstorm\Listener\PayRewards;
 use ErnestDefoe\Brainstorm\Quiz;
 use ErnestDefoe\Brainstorm\Search;
@@ -29,6 +30,7 @@ use Flarum\Api\Resource\ForumResource;
 use Flarum\Api\Resource\UserResource;
 use Flarum\Extend;
 use Flarum\Search\Database\DatabaseSearchDriver;
+use Flarum\User\User;
 use Illuminate\Console\Scheduling\Event;
 
 return [
@@ -89,6 +91,10 @@ return [
 
     (new Extend\ApiResource(UserResource::class))
         ->fields(Api\Fields\UserFields::class),
+
+    // 1.1's `users.quiz_private`, read-only, for extensions that still read it.
+    (new Extend\Model(User::class))
+        ->cast('quiz_private', LeaderboardChoice::class),
 
     // No rewards unless FoF Badges or FoF Gamification bind theirs below.
     (new Extend\ServiceProvider())

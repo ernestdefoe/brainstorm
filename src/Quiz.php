@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Flarum\Database\AbstractModel;
 use Flarum\Database\ScopeVisibilityTrait;
 use Flarum\User\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -112,5 +113,18 @@ class Quiz extends AbstractModel
             && $this->question_count > 0
             && (! $this->opens_at || $this->opens_at->lte($now))
             && (! $this->closes_at || $this->closes_at->gt($now));
+    }
+
+    /**
+     * The quizzes this actor may see: the same as `whereVisibleTo($actor)`,
+     * under the name 1.1 gave it.
+     *
+     * @deprecated 1.2.1 Use whereVisibleTo(); kept for Buzz and Syllabus, remove once they have switched.
+     *
+     * @param Builder<Quiz> $query
+     */
+    public function scopeVisibleTo(Builder $query, User $actor): void
+    {
+        $query->whereVisibleTo($actor);
     }
 }
