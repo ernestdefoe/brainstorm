@@ -762,4 +762,28 @@ class QuizTest extends TestCase
         $this->assertSame(0, $this->database()->table('quiz_attempts')->count());
         $this->assertSame(201, $this->json('POST', '/api/quizzes/'.$quiz['id'].'/attempts', 2)[0], 'and may start once it is done');
     }
+
+    #[Test]
+    public function a_title_repeating_a_word_with_and_without_accents_saves(): void
+    {
+        $quiz = $this->quiz(['title' => 'Cafe or café? CAFE!']);
+
+        $this->assertSame('Cafe or café? CAFE!', $quiz['title']);
+        $this->assertSame(['Cafe or café? CAFE!'], array_column($this->json('GET', '/api/quizzes?filter[q]=caf', 2)[1]['data'], 'title'));
+    }
+
+    #[Test]
+    public function the_scheduled_sweep_marks_abandoned_attempts(): void
+    {
+        $quiz = $this->quiz(['timeLimit' => 60]);
+        $this->start($quiz['id']);
+        $this->start($quiz['id'], 3);
+        Carbon::setTestNow(Carbon::now()->addMinutes(5));
+
+        $marked = $this->app()->getContainer()->make(\ErnestDefoe\Brainstorm\Attempts::class)->expireAll(500);
+
+        $this->assertSame(2, $marked);
+        $this->assertSame(0, $this->database()->table('quiz_attempts')->whereNull('submitted_at')->count());
+        $this->assertSame(2, $this->database()->table('quiz_attempts')->where('expired', true)->count());
+    }
 }

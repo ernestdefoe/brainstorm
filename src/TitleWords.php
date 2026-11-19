@@ -45,6 +45,8 @@ class TitleWords extends AbstractModel
     public static function index(Quiz $quiz): void
     {
         self::query()->where('quiz_id', $quiz->id)->delete();
-        self::query()->insert(array_map(fn ($word) => ['quiz_id' => $quiz->id, 'word' => $word], self::of($quiz->title)));
+        // Ignoring a clash: a database whose collation ignores accents or case
+        // (MySQL's default) counts "cafe" and "café" as one word.
+        self::query()->insertOrIgnore(array_map(fn ($word) => ['quiz_id' => $quiz->id, 'word' => $word], self::of($quiz->title)));
     }
 }

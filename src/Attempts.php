@@ -230,7 +230,7 @@ class Attempts
      */
     public function expireAll(int $max): int
     {
-        return $this->expire(Attempt::query()->with('quiz')->limit($max), null);
+        return $this->expire(Attempt::query()->with(['quiz', 'user'])->limit($max), null);
     }
 
     /**

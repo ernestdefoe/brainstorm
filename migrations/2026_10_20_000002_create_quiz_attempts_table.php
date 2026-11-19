@@ -36,7 +36,7 @@ return Migration::createTable('quiz_attempts', function (Blueprint $table) {
     $table->foreign('quiz_id')->references('id')->on('quizzes')->cascadeOnDelete();
     $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
     $table->index(['quiz_id', 'user_id']);
-    // Finding attempts whose clock ran out.
+    // A quiz's finished attempts, newest first (its results).
     $table->index(['quiz_id', 'submitted_at', 'deadline_at']);
     $table->index(['user_id', 'started_at']);
 });
