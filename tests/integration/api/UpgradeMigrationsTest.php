@@ -33,8 +33,7 @@ class UpgradeMigrationsTest extends TestCase
         $schema = $this->database()->getSchemaBuilder();
         $move = require __DIR__.'/../../../migrations/2026_11_19_000001_move_quiz_private_off_users.php';
 
-        // The forum as 1.1.x left it: its migration ran, and carol had opted out.
-        $this->database()->table('migrations')->insert(['migration' => '2026_10_20_000004_add_quiz_private_to_users', 'extension' => 'ernestdefoe-brainstorm']);
+        // The forum as 1.1.x left it: carol had opted out.
         $schema->table('users', fn (Blueprint $table) => $table->boolean('quiz_private')->default(false));
         $this->database()->table('users')->where('id', 3)->update(['quiz_private' => true]);
         $optedOut = fn () => $this->database()->table('quiz_leaderboard_opt_outs')->pluck('user_id')->map(fn ($id) => (int) $id)->all();
@@ -43,7 +42,7 @@ class UpgradeMigrationsTest extends TestCase
         $this->assertFalse($schema->hasColumn('users', 'quiz_private'));
         $this->assertSame([3], $optedOut());
 
-        // Down: the column is back with carol's choice; the next migration down drops the opt-out table.
+        // Down: the column is back with carol's choice.
         $move['down']($schema);
         $this->assertTrue($schema->hasColumn('users', 'quiz_private'));
         $this->assertSame([3], $this->database()->table('users')->where('quiz_private', true)->pluck('id')->map(fn ($id) => (int) $id)->all());
@@ -52,6 +51,12 @@ class UpgradeMigrationsTest extends TestCase
         $move['up']($schema);
         $this->assertFalse($schema->hasColumn('users', 'quiz_private'));
         $this->assertSame([3], $optedOut());
+
+        // Rolling back past 1.1's own migration takes the column away, as 1.1 did.
+        $added = require __DIR__.'/../../../migrations/2026_10_20_000004_add_quiz_private_to_users.php';
+        $move['down']($schema);
+        $added['down']($schema);
+        $this->assertFalse($schema->hasColumn('users', 'quiz_private'));
     }
 
     /**
@@ -60,7 +65,6 @@ class UpgradeMigrationsTest extends TestCase
      */
     protected function tearDown(): void
     {
-        $this->database()->table('migrations')->where('migration', '2026_10_20_000004_add_quiz_private_to_users')->delete();
         $this->database()->table('quiz_leaderboard_opt_outs')->delete();
         if ($this->database()->getSchemaBuilder()->hasColumn('users', 'quiz_private')) {
             $this->database()->getSchemaBuilder()->table('users', fn (Blueprint $table) => $table->dropColumn('quiz_private'));
@@ -70,14 +74,26 @@ class UpgradeMigrationsTest extends TestCase
     }
 
     #[Test]
-    public function a_forum_that_never_had_the_column_gets_none_on_rollback(): void
+    public function purging_an_upgraded_forum_rolls_every_migration_back_and_installing_again_works(): void
     {
+        $c = $this->app()->getContainer();
+        $migrator = $c->make(\Flarum\Database\Migrator::class);
+        $extension = $c->make(\Flarum\Extension\ExtensionManager::class)->getExtension('ernestdefoe-brainstorm');
         $schema = $this->database()->getSchemaBuilder();
-        $move = require __DIR__.'/../../../migrations/2026_11_19_000001_move_quiz_private_off_users.php';
+        $this->database()->table('quiz_leaderboard_opt_outs')->insert(['user_id' => 3]);
 
-        $move['up']($schema);
-        $move['down']($schema);
+        try {
+            $extension->migrate($migrator, 'down');
 
+            $this->assertFalse($schema->hasTable('quizzes'));
+            $this->assertFalse($schema->hasTable('quiz_leaderboard_opt_outs'));
+            $this->assertFalse($schema->hasColumn('users', 'quiz_private'), 'users is left as it was before Brainstorm');
+            $this->assertSame(0, $this->database()->table('migrations')->where('extension', 'ernestdefoe-brainstorm')->count());
+        } finally {
+            $extension->migrate($migrator, 'up');
+        }
+
+        $this->assertTrue($schema->hasTable('quiz_leaderboard_opt_outs'));
         $this->assertFalse($schema->hasColumn('users', 'quiz_private'));
     }
 

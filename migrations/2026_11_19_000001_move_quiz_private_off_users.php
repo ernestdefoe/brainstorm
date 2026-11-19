@@ -10,9 +10,9 @@ use Illuminate\Database\Schema\Builder;
  * opt-out row and the column goes; a new install never had it, so there is
  * nothing to do.
  *
- * Down puts such a forum back as 1.1.x left it: the column, filled from the
- * opt-out rows (the next migration down then drops their table). A forum
- * that never ran 1.1's migration never had the column, so it gets none.
+ * Down puts the forum back as 1.1.x left it: the column, filled from the
+ * opt-out rows. Rolling further back, 2026_11_19_000000 drops the opt-out
+ * table and 2026_10_20_000004 drops the column again.
  */
 return [
     'up' => function (Builder $schema) {
@@ -35,13 +35,7 @@ return [
         });
     },
     'down' => function (Builder $schema) {
-        $db = $schema->getConnection();
-        $hadColumn = $db->table('migrations')
-            ->where('extension', 'ernestdefoe-brainstorm')
-            ->where('migration', '2026_10_20_000004_add_quiz_private_to_users')
-            ->exists();
-
-        if (! $hadColumn || $schema->hasColumn('users', 'quiz_private')) {
+        if ($schema->hasColumn('users', 'quiz_private')) {
             return;
         }
 
@@ -49,6 +43,7 @@ return [
             $table->boolean('quiz_private')->default(false);
         });
 
+        $db = $schema->getConnection();
         $db->table('users')
             ->whereIn('id', $db->table('quiz_leaderboard_opt_outs')->select('user_id'))
             ->update(['quiz_private' => true]);
