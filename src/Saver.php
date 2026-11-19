@@ -4,11 +4,11 @@ namespace ErnestDefoe\Brainstorm;
 
 use Carbon\Carbon;
 use Flarum\Foundation\ValidationException;
+use Flarum\Locale\TranslatorInterface;
 use Flarum\User\User;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Creates and updates a quiz and its questions from the editor's payload.
@@ -32,14 +32,14 @@ class Saver
     }
 
     /**
-     * On an update only the keys sent are touched: a client that sends
-     * `{status}` alone publishes the quiz and leaves everything else as it was.
+     * A new quiz (not yet saved) is created; on an update only the keys
+     * sent are touched: a client that sends `{status}` alone publishes the
+     * quiz and leaves everything else as it was.
      *
      * @param array<string, mixed> $data
      */
-    public function save(?Quiz $quiz, array $data, User $actor): Quiz
+    public function save(Quiz $quiz, array $data, User $actor): Quiz
     {
-        $quiz ??= new Quiz();
         $isNew = ! $quiz->exists;
         $has = fn (string $key) => $isNew || array_key_exists($key, $data);
         $checked = $this->checked($quiz, $data, $has);
@@ -101,6 +101,7 @@ class Saver
         }
 
         $quiz->title = $checked['title'];
+        $retitled = $isNew || $quiz->isDirty('title');
         $quiz->slug = Str::limit(Str::slug($checked['title']), 190, '') ?: 'quiz';
         $quiz->status = $checked['status'];
         $quiz->reveal = $checked['reveal'];
@@ -133,6 +134,10 @@ class Saver
         }
 
         $quiz->save();
+
+        if ($retitled) {
+            TitleWords::index($quiz);
+        }
 
         return $quiz;
     }

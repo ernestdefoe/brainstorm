@@ -2,7 +2,6 @@
 
 namespace ErnestDefoe\Brainstorm;
 
-use Carbon\Carbon;
 use Flarum\Http\SlugManager;
 use Flarum\User\User;
 use Illuminate\Support\Collection;
@@ -157,8 +156,7 @@ class Presenter
             'practice' => $attempt->practice,
             'startedAt' => $attempt->started_at->toIso8601String(),
             'deadlineAt' => $attempt->deadline_at?->toIso8601String(),
-            // The player's clock may be wrong; the countdown runs from this.
-            'secondsLeft' => $attempt->deadline_at ? max(0, $attempt->deadline_at->getTimestamp() - Carbon::now()->getTimestamp()) : null,
+            'secondsLeft' => $attempt->secondsLeft(),
             'questions' => $slots,
             'answers' => (object) ($attempt->answers ?: []),
         ];

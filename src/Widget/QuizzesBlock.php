@@ -3,8 +3,8 @@
 namespace ErnestDefoe\Brainstorm\Widget;
 
 use Ernestdefoe\PageBuilder\Block\BlockInterface;
+use Flarum\Locale\TranslatorInterface;
 use Flarum\User\User;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Brainstorm's widget as a Page Builder block: the top quiz takers, or the

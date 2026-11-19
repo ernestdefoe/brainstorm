@@ -17,7 +17,7 @@ use s9e\TextFormatter\Utils;
  */
 class RichText
 {
-    public function __construct(protected Formatter $formatter, private LoggerInterface $log)
+    public function __construct(protected Formatter $formatter, private LoggerInterface $log, private MentionKinds $mentions)
     {
     }
 
@@ -59,12 +59,7 @@ class RichText
      */
     public function prime(iterable $quizzes, iterable $texts): void
     {
-        $kinds = [
-            'USERMENTION' => ['mentionsUsers', User::class, []],
-            'POSTMENTION' => ['mentionsPosts', 'Flarum\Post\Post', ['user', 'discussion']],
-            'GROUPMENTION' => ['mentionsGroups', 'Flarum\Group\Group', []],
-            'TAGMENTION' => ['mentionsTags', 'Flarum\Tags\Tag', []],
-        ];
+        $kinds = $this->mentions->all();
 
         $ids = [];
         foreach ($texts as $xml) {
@@ -79,9 +74,6 @@ class RichText
 
         foreach ($ids as $tag => $found) {
             [$relation, $class, $with] = $kinds[$tag];
-            if (! class_exists($class)) {
-                continue;
-            }
 
             /** @var Collection<int, \Flarum\Database\AbstractModel> $models */
             $models = $class::query()->with($with)->findMany(array_keys($found));

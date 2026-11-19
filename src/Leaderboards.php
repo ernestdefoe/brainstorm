@@ -16,7 +16,7 @@ class Leaderboards
 {
     public const SIZE = 25;
 
-    public function __construct(private Presenter $presenter, private Attempts $attempts)
+    public function __construct(private Presenter $presenter)
     {
     }
 
@@ -26,9 +26,6 @@ class Leaderboards
         if (! $quiz->leaderboard && ! Access::canEdit($actor, $quiz)) {
             return ['rows' => [], 'me' => null, 'off' => true];
         }
-
-        // Timed attempts abandoned mid-way are marked before anyone is ranked.
-        $this->attempts->expireOverdue($quiz);
 
         $base = fn () => $this->visible(Best::query()->where('quiz_bests.quiz_id', $quiz->id), $actor);
 

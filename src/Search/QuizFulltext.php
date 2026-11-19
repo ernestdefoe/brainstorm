@@ -2,30 +2,31 @@
 
 namespace ErnestDefoe\Brainstorm\Search;
 
+use ErnestDefoe\Brainstorm\TitleWords;
 use Flarum\Search\AbstractFulltextFilter;
 use Flarum\Search\Database\DatabaseSearchState;
 use Flarum\Search\SearchState;
 
 /**
- * filter[q]: quizzes whose title contains the words, in any case.
- *
- * A contains-match, so "capitals" finds "European capitals". It scans
- * titles, which is fine for a forum's quizzes (hundreds, not millions) and
- * only runs when someone searches the quiz picker or list.
+ * filter[q]: quizzes with a title word starting with each word typed, in any
+ * case: "euro cap" finds "European capitals". Matched on the indexed title
+ * words, start of word only, so the index answers it.
  *
  * @extends AbstractFulltextFilter<DatabaseSearchState>
  */
 class QuizFulltext extends AbstractFulltextFilter
 {
+    /** Words of a search that count. */
+    public const WORDS = 5;
+
     public function search(SearchState $state, string $value): void
     {
         /** @var DatabaseSearchState $state */
-        // LIKE's wildcards are dropped, not escaped: SQLite has no default escape character.
-        $words = trim(str_replace(['%', '_', '\\'], ' ', mb_substr(trim($value), 0, 100)));
+        $query = $state->getQuery();
 
-        if ($words !== '') {
-            // whereLike is case-insensitive on every database (ILIKE on PostgreSQL).
-            $state->getQuery()->whereLike('quizzes.title', '%'.$words.'%');
+        // Letters and digits only, so nothing typed is a LIKE wildcard.
+        foreach (array_slice(TitleWords::of(mb_substr($value, 0, 100)), 0, self::WORDS) as $word) {
+            $query->whereIn('quizzes.id', TitleWords::query()->where('word', 'like', $word.'%')->select('quiz_id'));
         }
     }
 }

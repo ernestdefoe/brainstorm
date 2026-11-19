@@ -5,15 +5,16 @@ namespace ErnestDefoe\Brainstorm;
 use Carbon\Carbon;
 use ErnestDefoe\Brainstorm\Event\AttemptFinished;
 use Flarum\Foundation\ValidationException;
+use Flarum\Locale\TranslatorInterface;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\User;
 use Illuminate\Contracts\Cache\LockProvider;
 use Illuminate\Contracts\Cache\Repository as Cache;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Database\ConnectionInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Psr\Log\LoggerInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Starting, saving and marking attempts.
@@ -210,34 +211,57 @@ class Attempts
     }
 
     /**
-     * Mark attempts whose clock ran out while nobody was looking — the tab
-     * was closed, the battery died. Cheap when there are none: one select on
-     * the (quiz, submitted, deadline) index. A few at a time, so a page view
-     * never does a backlog's work; one that fails is logged and skipped.
+     * Mark this member's attempts at a quiz whose clock ran out while they
+     * were away, before they see the quiz or start again. Cheap when there
+     * are none: one select on the (quiz, user) index.
      */
-    public function expireOverdue(Quiz $quiz, ?User $user = null): void
+    public function expireOverdue(Quiz $quiz, User $user): void
     {
         if (! $quiz->time_limit && ! $quiz->closes_at) {
             return;
         }
 
-        $overdue = Attempt::query()
-            ->where('quiz_id', $quiz->id)
-            ->whereNull('submitted_at')
+        $this->expire(Attempt::query()->where('quiz_id', $quiz->id)->where('user_id', $user->id), $quiz);
+    }
+
+    /**
+     * Mark up to $max overdue attempts across every quiz (the scheduled
+     * sweep). Returns how many were marked.
+     */
+    public function expireAll(int $max): int
+    {
+        return $this->expire(Attempt::query()->with('quiz')->limit($max), null);
+    }
+
+    /**
+     * Mark the open attempts this query finds whose deadline (and grace) is
+     * past. One that fails is logged and skipped, so one bad attempt can't
+     * hold the rest up.
+     *
+     * @param Builder<Attempt> $query
+     */
+    private function expire(Builder $query, ?Quiz $quiz): int
+    {
+        $marked = 0;
+        $overdue = $query->whereNull('submitted_at')
             ->where('deadline_at', '<', Carbon::now()->subSeconds(Attempt::GRACE))
-            ->when($user, fn ($q) => $q->where('user_id', $user->id))
-            ->limit(10)
+            ->orderBy('id')
             ->get();
 
         foreach ($overdue as $attempt) {
-            $attempt->setRelation('quiz', $quiz);
+            if ($quiz) {
+                $attempt->setRelation('quiz', $quiz);
+            }
 
             try {
                 $this->submit($attempt);
+                $marked++;
             } catch (\Throwable $e) {
                 $this->log->error('[brainstorm] could not mark overdue attempt '.$attempt->id.': '.$e->getMessage());
             }
         }
+
+        return $marked;
     }
 
     /** Forget a member's attempts at a quiz (a manager's reset). Rewards already paid stay paid. */

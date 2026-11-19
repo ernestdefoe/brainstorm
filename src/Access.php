@@ -5,8 +5,9 @@ namespace ErnestDefoe\Brainstorm;
 use Flarum\User\User;
 
 /**
- * Who may do what to a quiz. The policies, resources and visibility scopes
- * ask here, so the rules live in one place.
+ * Who may do what to a quiz, asked by the policies and resources. The
+ * visibility scopes (Access\ScopeQuizVisibility, ScopeAttemptVisibility)
+ * apply the same rules in SQL, so a change here goes there too.
  */
 class Access
 {

@@ -720,8 +720,16 @@ class QuizTest extends TestCase
 
         $this->assertSame(['Rivers', 'European Capitals'], $titles(''), 'drafts stay off the shared list, even for their writer');
         $this->assertSame(['European Capitals'], $titles('?filter[q]=CAPITALS'), 'a search ignores case');
+        $this->assertSame(['European Capitals'], $titles('?filter[q]=euro%20cap'), 'each word typed matches the start of a title word');
+        $this->assertSame([], $titles('?filter[q]=apitals'), 'not the middle of one');
+        $this->assertSame([], $titles('?filter[q]=%25s'), 'a typed % is not a wildcard');
         $this->assertSame('Rivers', $titles('?sort=-attemptCount,-publishedAt')[0]);
         $this->assertContains('Unfinished capitals', $titles('?filter[mine]=1'));
+
+        // A new title is searched by its new words only.
+        $this->json('PATCH', '/api/quizzes/'.$popular['id'], 1, ['data' => ['title' => 'Mountains']]);
+        $this->assertSame(['Mountains'], $titles('?filter[q]=mount'));
+        $this->assertSame([], $titles('?filter[q]=rivers'));
         $this->assertSame([], $titles('?filter[mine]=1', null), 'a guest has no quizzes of their own');
         $this->assertSame(['Unfinished capitals'], $titles('?filter[ids]='.$draft['id']), 'a writer sees their linked draft');
         $this->assertSame([], $titles('?filter[ids]='.$draft['id'], 2), 'a member does not');

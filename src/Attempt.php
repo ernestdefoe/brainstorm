@@ -98,6 +98,12 @@ class Attempt extends AbstractModel
             && $this->deadline_at->copy()->addSeconds(self::GRACE)->lt(Carbon::now());
     }
 
+    /** Seconds until the server's deadline, or null for an untimed attempt. The player's clock may be wrong; its countdown runs from this. */
+    public function secondsLeft(): ?int
+    {
+        return $this->deadline_at ? max(0, $this->deadline_at->getTimestamp() - Carbon::now()->getTimestamp()) : null;
+    }
+
     /** @return list<int> */
     public function questionIds(): array
     {

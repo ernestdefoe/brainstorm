@@ -175,7 +175,7 @@ class AttemptResource extends AbstractDatabaseResource
 
         $attempt->view = [
             'finished' => false,
-            'secondsLeft' => $attempt->deadline_at ? max(0, $attempt->deadline_at->getTimestamp() - Carbon::now()->getTimestamp()) : null,
+            'secondsLeft' => $attempt->secondsLeft(),
         ];
 
         return $attempt;

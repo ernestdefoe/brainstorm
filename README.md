@@ -46,6 +46,14 @@ composer require ernestdefoe/brainstorm
 
 Then enable **Brainstorm** in the admin panel.
 
+Timed attempts that a member abandons (closed the tab, lost the connection) are marked by a scheduled task every five minutes. Make sure Flarum's scheduler runs, as described in [Flarum's scheduler docs](https://docs.flarum.org/2.x/scheduler):
+
+```sh
+* * * * * cd /path/to/flarum && php flarum schedule:run >> /dev/null 2>&1
+```
+
+Without it, an abandoned attempt is still marked when its member next opens the quiz.
+
 ## Updating
 
 ```sh

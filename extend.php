@@ -11,13 +11,16 @@
 
 use ErnestDefoe\Brainstorm\Access;
 use ErnestDefoe\Brainstorm\Api;
+use ErnestDefoe\Brainstorm\Console;
 use ErnestDefoe\Brainstorm\Attempt;
 use ErnestDefoe\Brainstorm\Content\QuizDocument;
 use ErnestDefoe\Brainstorm\Event\AttemptFinished;
 use ErnestDefoe\Brainstorm\Integration\Badges\BadgesProvider;
+use ErnestDefoe\Brainstorm\Integration\Badges\EvaluateBadges;
 use ErnestDefoe\Brainstorm\Integration\Gamification\GamificationProvider;
 use ErnestDefoe\Brainstorm\Integration\Onramp\PassQuizzesStep;
 use ErnestDefoe\Brainstorm\Integration\Rewards\RewardsProvider;
+use ErnestDefoe\Brainstorm\Integration\Tags\TagMentionsProvider;
 use ErnestDefoe\Brainstorm\Listener\PayRewards;
 use ErnestDefoe\Brainstorm\Quiz;
 use ErnestDefoe\Brainstorm\Search;
@@ -26,6 +29,7 @@ use Flarum\Api\Resource\ForumResource;
 use Flarum\Api\Resource\UserResource;
 use Flarum\Extend;
 use Flarum\Search\Database\DatabaseSearchDriver;
+use Illuminate\Console\Scheduling\Event;
 
 return [
     (new Extend\Frontend('forum'))
@@ -68,6 +72,13 @@ return [
     (new Extend\Event())
         ->listen(AttemptFinished::class, PayRewards::class),
 
+    // Abandoned timed attempts are marked in the background, not by whoever views a leaderboard.
+    (new Extend\Console())
+        ->command(Console\ExpireAttempts::class)
+        ->schedule(Console\ExpireAttempts::class, function (Event $event): void {
+            $event->everyFiveMinutes()->withoutOverlapping();
+        }),
+
     (new Extend\Settings())
         ->default('ernestdefoe-brainstorm.show_nav', true)
         ->default('ernestdefoe-brainstorm.editors_count', false)
@@ -86,9 +97,13 @@ return [
     (new Extend\Conditional())
         ->whenExtensionEnabled('fof-badges', fn () => [
             (new Extend\ServiceProvider())->register(BadgesProvider::class),
+            (new Extend\Event())->listen(AttemptFinished::class, EvaluateBadges::class),
         ])
         ->whenExtensionEnabled('fof-gamification', fn () => [
             (new Extend\ServiceProvider())->register(GamificationProvider::class),
+        ])
+        ->whenExtensionEnabled('flarum-tags', fn () => [
+            (new Extend\ServiceProvider())->register(TagMentionsProvider::class),
         ])
         ->whenExtensionEnabled('ernestdefoe-onramp', fn () => [
             (new \ErnestDefoe\Onramp\Extend\StepTypes())->add(PassQuizzesStep::class),
