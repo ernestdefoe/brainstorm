@@ -54,4 +54,32 @@ class CompatibilityTest extends TestCase
         $carol->save();
         $this->assertSame('carol_quizzes', User::query()->find(3)->username);
     }
+
+    #[Test]
+    public function a_list_reads_quiz_private_in_one_query_and_never_serializes_it(): void
+    {
+        $this->app();
+        $users = User::query()->with('quizOptOut')->whereIn('id', [1, 2, 3])->orderBy('id')->get();
+
+        $queries = 0;
+        $this->database()->listen(function () use (&$queries) {
+            $queries++;
+        });
+        $private = $users->map(fn (User $user) => $user->getAttribute('quiz_private'))->all();
+
+        $this->assertSame([false, false, true], $private);
+        $this->assertSame(0, $queries, 'the eager-loaded relation answers every user');
+        $this->assertArrayNotHasKey('quiz_private', $users[2]->toArray());
+        $this->assertSame([3], User::query()->whereIn('id', \ErnestDefoe\Brainstorm\OptOut::userIds())->pluck('id')->map(fn ($id) => (int) $id)->all());
+    }
+
+    #[Test]
+    public function the_api_never_sends_quiz_private_on_users(): void
+    {
+        $response = $this->send($this->request('GET', '/api/users', ['authenticatedAs' => 1]));
+        $body = (string) $response->getBody();
+
+        $this->assertSame(200, $response->getStatusCode(), $body);
+        $this->assertStringNotContainsString('quiz_private', $body);
+    }
 }

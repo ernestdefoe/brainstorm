@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * `$user->quiz_private` as it read before 1.2, when it was a users column:
  * now worked out from the opt-out table, for extensions that still read it
- * (Buzz keeps an opted-out member's quiz passes off its feed with it). Nothing
+ * (Buzz keeps an opted-out member's quiz passes off its feed with it). It is
+ * never serialized (no users column carries it), and a list that reads it
+ * eager-loads `quizOptOut` so all its users cost one query. Nothing
  * is ever written back: the choice is changed through the user's
  * `quizPrivate` API field.
  *
@@ -22,7 +24,14 @@ class LeaderboardChoice implements CastsAttributes
     /** @param array<string, mixed> $attributes */
     public function get(Model $model, string $key, mixed $value, array $attributes): bool
     {
-        return $model instanceof User && $model->exists && OptOut::query()->whereKey($model->getKey())->exists();
+        if (! $model instanceof User || ! $model->exists) {
+            return false;
+        }
+
+        // A list loads the relation once for all its users (`with('quizOptOut')`).
+        return $model->relationLoaded('quizOptOut')
+            ? $model->getRelation('quizOptOut') !== null
+            : OptOut::query()->whereKey($model->getKey())->exists();
     }
 
     /**

@@ -128,7 +128,7 @@ class Leaderboards
     private function visible(Builder $query, User $actor): Builder
     {
         return $query
-            ->whereNotIn('quiz_bests.user_id', OptOut::query()->where('user_id', '!=', $actor->id)->select('user_id'))
+            ->whereNotIn('quiz_bests.user_id', OptOut::userIds()->where('user_id', '!=', $actor->id))
             ->whereIn('quiz_bests.user_id', User::query()->whereVisibleTo($actor)->select('users.id'));
     }
 
