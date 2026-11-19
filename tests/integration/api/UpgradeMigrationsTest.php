@@ -28,22 +28,57 @@ class UpgradeMigrationsTest extends TestCase
     }
 
     #[Test]
-    public function an_upgraded_forum_keeps_its_members_choices(): void
+    public function an_upgraded_forum_keeps_its_members_choices_up_down_and_up_again(): void
     {
         $schema = $this->database()->getSchemaBuilder();
         $move = require __DIR__.'/../../../migrations/2026_11_19_000001_move_quiz_private_off_users.php';
 
-        // The forum as 1.1.x left it: carol had opted out.
+        // The forum as 1.1.x left it: its migration ran, and carol had opted out.
+        $this->database()->table('migrations')->insert(['migration' => '2026_10_20_000004_add_quiz_private_to_users', 'extension' => 'ernestdefoe-brainstorm']);
         $schema->table('users', fn (Blueprint $table) => $table->boolean('quiz_private')->default(false));
         $this->database()->table('users')->where('id', 3)->update(['quiz_private' => true]);
+        $optedOut = fn () => $this->database()->table('quiz_leaderboard_opt_outs')->pluck('user_id')->map(fn ($id) => (int) $id)->all();
 
         $move['up']($schema);
+        $this->assertFalse($schema->hasColumn('users', 'quiz_private'));
+        $this->assertSame([3], $optedOut());
+
+        // Down: the column is back with carol's choice; the next migration down drops the opt-out table.
+        $move['down']($schema);
+        $this->assertTrue($schema->hasColumn('users', 'quiz_private'));
+        $this->assertSame([3], $this->database()->table('users')->where('quiz_private', true)->pluck('id')->map(fn ($id) => (int) $id)->all());
+        $this->database()->table('quiz_leaderboard_opt_outs')->delete();
+
+        $move['up']($schema);
+        $this->assertFalse($schema->hasColumn('users', 'quiz_private'));
+        $this->assertSame([3], $optedOut());
+    }
+
+    /**
+     * MySQL commits a schema change on the spot, and with it the rows written
+     * before it, so the test transaction can't undo them: tidy up by hand.
+     */
+    protected function tearDown(): void
+    {
+        $this->database()->table('migrations')->where('migration', '2026_10_20_000004_add_quiz_private_to_users')->delete();
+        $this->database()->table('quiz_leaderboard_opt_outs')->delete();
+        if ($this->database()->getSchemaBuilder()->hasColumn('users', 'quiz_private')) {
+            $this->database()->getSchemaBuilder()->table('users', fn (Blueprint $table) => $table->dropColumn('quiz_private'));
+        }
+
+        parent::tearDown();
+    }
+
+    #[Test]
+    public function a_forum_that_never_had_the_column_gets_none_on_rollback(): void
+    {
+        $schema = $this->database()->getSchemaBuilder();
+        $move = require __DIR__.'/../../../migrations/2026_11_19_000001_move_quiz_private_off_users.php';
+
+        $move['up']($schema);
+        $move['down']($schema);
 
         $this->assertFalse($schema->hasColumn('users', 'quiz_private'));
-        $this->assertSame([3], $this->database()->table('quiz_leaderboard_opt_outs')->pluck('user_id')->map(fn ($id) => (int) $id)->all());
-
-        $move['down']($schema);
-        $this->assertFalse($schema->hasColumn('users', 'quiz_private'), 'down puts nothing back on users');
     }
 
     #[Test]

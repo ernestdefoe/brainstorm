@@ -5,12 +5,14 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\Builder;
 
 /**
- * Up to 1.1.x the leaderboard choice was a `users.quiz_private` column. On a
- * forum upgraded from it, each member who had it on gets an opt-out row and
- * the column goes; a new install never had it, so there is nothing to do.
+ * Up to 1.1.x the leaderboard choice was Brainstorm's `users.quiz_private`
+ * column. On a forum upgraded from it, each member who had it on gets an
+ * opt-out row and the column goes; a new install never had it, so there is
+ * nothing to do.
  *
- * Down leaves `users` as it is: 1.2 neither adds nor reads that column, and
- * the opt-out table's own migration takes the choices away on uninstall.
+ * Down puts such a forum back as 1.1.x left it: the column, filled from the
+ * opt-out rows (the next migration down then drops their table). A forum
+ * that never ran 1.1's migration never had the column, so it gets none.
  */
 return [
     'up' => function (Builder $schema) {
@@ -33,6 +35,22 @@ return [
         });
     },
     'down' => function (Builder $schema) {
-        // Nothing to restore: see above.
+        $db = $schema->getConnection();
+        $hadColumn = $db->table('migrations')
+            ->where('extension', 'ernestdefoe-brainstorm')
+            ->where('migration', '2026_10_20_000004_add_quiz_private_to_users')
+            ->exists();
+
+        if (! $hadColumn || $schema->hasColumn('users', 'quiz_private')) {
+            return;
+        }
+
+        $schema->table('users', function (Blueprint $table) {
+            $table->boolean('quiz_private')->default(false);
+        });
+
+        $db->table('users')
+            ->whereIn('id', $db->table('quiz_leaderboard_opt_outs')->select('user_id'))
+            ->update(['quiz_private' => true]);
     },
 ];
