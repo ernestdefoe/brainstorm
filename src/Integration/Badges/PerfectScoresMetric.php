@@ -2,18 +2,14 @@
 
 namespace ErnestDefoe\Brainstorm\Integration\Badges;
 
+use ErnestDefoe\Brainstorm\Best;
 use ErnestDefoe\Brainstorm\Event\AttemptFinished;
 use Flarum\User\User;
 use FoF\Badges\Trigger\MetricInterface;
-use Illuminate\Database\ConnectionInterface;
 
 /** A FoF Badges trigger: "quizzes finished with 100% ≥ N". */
 class PerfectScoresMetric implements MetricInterface
 {
-    public function __construct(private ConnectionInterface $db)
-    {
-    }
-
     public function getType(): string
     {
         return 'brainstorm_perfect_scores';
@@ -31,7 +27,7 @@ class PerfectScoresMetric implements MetricInterface
 
     public function getValue(User $user, array $config = []): int
     {
-        return $this->db->table('quiz_bests')->where('user_id', $user->id)->where('percent', '>=', 100)->count();
+        return Best::query()->where('user_id', $user->id)->where('percent', '>=', 100)->count();
     }
 
     public function isBoolean(): bool

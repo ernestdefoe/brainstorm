@@ -42,21 +42,27 @@ class Saver
         $quiz ??= new Quiz();
         $isNew = ! $quiz->exists;
         $has = fn (string $key) => $isNew || array_key_exists($key, $data);
+        $checked = $this->checked($quiz, $data, $has);
 
+        return $this->db->transaction(fn () => $this->write($quiz, $isNew, $has, $data, $actor, $checked));
+    }
+
+    /**
+     * The values that are checked before anything is written.
+     *
+     * @param array<string, mixed> $data
+     * @param callable(string): bool $has
+     * @return array{title: string, status: string, reveal: string, opensAt: Carbon|null, closesAt: Carbon|null, questions: list<array<string, mixed>>|null}
+     */
+    private function checked(Quiz $quiz, array $data, callable $has): array
+    {
         $title = trim((string) Arr::get($data, 'title', $quiz->title ?? ''));
         if ($title === '' || mb_strlen($title) > 200) {
             $this->fail('title', 'title');
         }
 
         $status = Arr::get($data, 'status', $quiz->status ?? 'draft');
-        if (! in_array($status, ['draft', 'published'], true)) {
-            $status = 'draft';
-        }
-
         $reveal = Arr::get($data, 'reveal', $quiz->reveal ?? 'answers');
-        if (! in_array($reveal, Quiz::REVEALS, true)) {
-            $reveal = 'answers';
-        }
 
         $opensAt = $has('opensAt') ? $this->date(Arr::get($data, 'opensAt'), 'opensAt') : $quiz->opens_at;
         $closesAt = $has('closesAt') ? $this->date(Arr::get($data, 'closesAt'), 'closesAt') : $quiz->closes_at;
@@ -65,54 +71,70 @@ class Saver
         }
 
         $questions = $has('questions') ? $this->questions(Arr::get($data, 'questions', [])) : null;
+        $status = in_array($status, ['draft', 'published'], true) ? $status : 'draft';
 
         if ($status === 'published' && ($questions === null ? ! $quiz->question_count : ! $questions)) {
             $this->fail('status', 'publish_empty');
         }
 
-        return $this->db->transaction(function () use ($quiz, $isNew, $has, $data, $actor, $title, $status, $reveal, $opensAt, $closesAt, $questions) {
-            $before = $isNew ? null : $this->marking($quiz, $quiz->questions()->get()->all());
+        return [
+            'title' => $title,
+            'status' => $status,
+            'reveal' => in_array($reveal, Quiz::REVEALS, true) ? $reveal : 'answers',
+            'opensAt' => $opensAt,
+            'closesAt' => $closesAt,
+            'questions' => $questions,
+        ];
+    }
 
-            if ($isNew) {
-                $quiz->user_id = $actor->id;
-            }
+    /**
+     * @param callable(string): bool $has
+     * @param array<string, mixed> $data
+     * @param array{title: string, status: string, reveal: string, opensAt: Carbon|null, closesAt: Carbon|null, questions: list<array<string, mixed>>|null} $checked
+     */
+    private function write(Quiz $quiz, bool $isNew, callable $has, array $data, User $actor, array $checked): Quiz
+    {
+        $before = $isNew ? null : $this->marking($quiz, $quiz->questions()->get()->all());
 
-            $quiz->title = $title;
-            $quiz->slug = Str::limit(Str::slug($title), 190, '') ?: 'quiz';
-            $quiz->status = $status;
-            $quiz->reveal = $reveal;
-            $quiz->opens_at = $opensAt;
-            $quiz->closes_at = $closesAt;
+        if ($isNew) {
+            $quiz->user_id = $actor->id;
+        }
 
-            $this->applySettings($quiz, $has, $data);
+        $quiz->title = $checked['title'];
+        $quiz->slug = Str::limit(Str::slug($checked['title']), 190, '') ?: 'quiz';
+        $quiz->status = $checked['status'];
+        $quiz->reveal = $checked['reveal'];
+        $quiz->opens_at = $checked['opensAt'];
+        $quiz->closes_at = $checked['closesAt'];
 
-            if ($status === 'published' && ! $quiz->published_at) {
-                $quiz->published_at = Carbon::now();
-            }
+        $this->applySettings($quiz, $has, $data);
 
-            $this->applyRewards($quiz, $isNew, $has, $data, $actor);
+        if ($checked['status'] === 'published' && ! $quiz->published_at) {
+            $quiz->published_at = Carbon::now();
+        }
 
-            // A new quiz is saved first: the formatter is given it as context.
-            if ($isNew) {
-                $quiz->save();
-            }
-            if ($has('description')) {
-                $quiz->description = $this->rich->store((string) Arr::get($data, 'description', ''), $quiz, $actor);
-            }
+        $this->applyRewards($quiz, $isNew, $has, $data, $actor);
 
-            if ($questions !== null) {
-                $quiz->question_count = count($questions);
-                $this->syncQuestions($quiz, $questions, $actor);
-            }
-
-            if ($before !== null) {
-                $this->assertMarkingKept($quiz, $before, $actor);
-            }
-
+        // A new quiz is saved first: the formatter is given it as context.
+        if ($isNew) {
             $quiz->save();
+        }
+        if ($has('description')) {
+            $quiz->description = $this->rich->store((string) Arr::get($data, 'description', ''), $quiz, $actor);
+        }
 
-            return $quiz;
-        });
+        if ($checked['questions'] !== null) {
+            $quiz->question_count = count($checked['questions']);
+            $this->syncQuestions($quiz, $checked['questions'], $actor);
+        }
+
+        if ($before !== null) {
+            $this->assertMarkingKept($quiz, $before, $actor);
+        }
+
+        $quiz->save();
+
+        return $quiz;
     }
 
     /**
@@ -299,18 +321,7 @@ class Saver
         $raw = is_array($raw) ? array_values(array_filter($raw, 'is_array')) : [];
 
         if ($type === 'boolean') {
-            // Two fixed options; the payload only says which one is right.
-            $true = false;
-            foreach ($raw as $o) {
-                if (($o['id'] ?? null) === 'true') {
-                    $true = (bool) ($o['correct'] ?? false);
-                }
-            }
-
-            return [
-                ['id' => 'true', 'text' => '', 'correct' => $true],
-                ['id' => 'false', 'text' => '', 'correct' => ! $true],
-            ];
+            return $this->trueFalse($raw);
         }
 
         $out = [];
@@ -324,15 +335,7 @@ class Saver
                 $this->fail('questions', 'option_length', $n);
             }
 
-            // Kept from the editor when well-formed, so a saved attempt's
-            // answers still name the same options; otherwise a fresh random id
-            // that says nothing about the option's place or truth.
-            $id = (string) ($o['id'] ?? '');
-            if (! preg_match('/^[a-z0-9]{6,16}$/', $id) || isset($seen[$id])) {
-                $id = bin2hex(random_bytes(4));
-            }
-            $seen[$id] = true;
-
+            $id = $this->optionId($o['id'] ?? null, $seen);
             $out[] = ['id' => $id, 'text' => $text, 'correct' => $type === 'text' || ! empty($o['correct'])];
         }
 
@@ -347,6 +350,45 @@ class Saver
         }
 
         return $out;
+    }
+
+    /**
+     * Two fixed options; the payload only says which one is right.
+     *
+     * @param list<array<string, mixed>> $raw
+     * @return list<array{id: string, text: string, correct: bool}>
+     */
+    private function trueFalse(array $raw): array
+    {
+        $true = false;
+        foreach ($raw as $o) {
+            if (($o['id'] ?? null) === 'true') {
+                $true = (bool) ($o['correct'] ?? false);
+            }
+        }
+
+        return [
+            ['id' => 'true', 'text' => '', 'correct' => $true],
+            ['id' => 'false', 'text' => '', 'correct' => ! $true],
+        ];
+    }
+
+    /**
+     * Kept from the editor when well-formed, so a saved attempt's answers
+     * still name the same options; otherwise a fresh random id that says
+     * nothing about the option's place or truth.
+     *
+     * @param array<string, bool> $seen ids already given out in this question
+     */
+    private function optionId(mixed $given, array &$seen): string
+    {
+        $id = (string) $given;
+        if (! preg_match('/^[a-z0-9]{6,16}$/', $id) || isset($seen[$id])) {
+            $id = bin2hex(random_bytes(4));
+        }
+        $seen[$id] = true;
+
+        return $id;
     }
 
     /** @param array<string, int> $n */
@@ -375,7 +417,7 @@ class Saver
             return null;
         }
 
-        return $this->db->table('fof_badges')->where('id', (int) $id)->exists() ? (int) $id : null;
+        return $this->rewards->badges()->exists((int) $id) ? (int) $id : null;
     }
 
     /** @param array<string, mixed> $data */
@@ -397,7 +439,8 @@ class Saver
 
         try {
             return Carbon::parse($value)->utc();
-        } catch (\Throwable) {
+        } catch (\InvalidArgumentException) {
+            // Carbon's "not a date" (InvalidFormatException): said on the field.
             $this->fail($field, 'dates');
         }
     }

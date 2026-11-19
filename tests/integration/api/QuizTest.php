@@ -12,6 +12,7 @@ use PHPUnit\Framework\Attributes\Test;
 class QuizTest extends TestCase
 {
     use RetrievesAuthorizedUsers;
+    use SpeaksJsonApi;
 
     protected function setUp(): void
     {
@@ -37,16 +38,21 @@ class QuizTest extends TestCase
     /** @return array{0: int, 1: array<string, mixed>|null, 2: string} */
     private function json(string $method, string $path, ?int $actor = null, ?array $body = null): array
     {
+        [$method, $path, $body] = self::toJsonApi($method, $path, $body);
         $options = $actor ? ['authenticatedAs' => $actor] : [];
         if ($body !== null) {
             $options['json'] = $body;
         }
 
-        $request = $this->request($method, $path, $options);
+        $request = $this->request($method, (string) strtok($path, '?'), $options);
+        if (str_contains($path, '?')) {
+            parse_str((string) parse_url($path, PHP_URL_QUERY), $query);
+            $request = $request->withQueryParams($query);
+        }
         $response = $this->send($actor ? $request : $request->withAttribute('bypassCsrfToken', true));
         $raw = (string) $response->getBody();
 
-        return [$response->getStatusCode(), json_decode($raw, true), $raw];
+        return [$response->getStatusCode(), self::flatten(json_decode($raw, true)), $raw];
     }
 
     /** A published quiz with one question of every type, written by the admin. */
@@ -93,7 +99,7 @@ class QuizTest extends TestCase
     private function start(int $quizId, int $actor = 2): array
     {
         [$status, $body, $raw] = $this->json('POST', "/api/quizzes/$quizId/attempts", $actor);
-        $this->assertSame(200, $status, $raw);
+        $this->assertSame(201, $status, $raw);
 
         return $body['data'];
     }
@@ -112,8 +118,8 @@ class QuizTest extends TestCase
         $quiz = $this->quiz(['reveal' => 'answers', 'maxAttempts' => 3]);
 
         [, , $list] = $this->json('GET', '/api/quizzes', 2);
-        [, , $show] = $this->json('GET', '/api/quizzes/'.$quiz['id'].'?edit=1', 2);
-        [, , $guest] = $this->json('GET', '/api/quizzes/'.$quiz['id'].'?edit=1');
+        [, , $show] = $this->json('GET', '/api/quizzes/'.$quiz['id'].'?withEdit=1', 2);
+        [, , $guest] = $this->json('GET', '/api/quizzes/'.$quiz['id'].'?withEdit=1');
         $paper = $this->start($quiz['id']);
         [, , $resumed] = $this->json('GET', '/api/quiz-attempts/'.$paper['id'], 2);
 
@@ -281,8 +287,9 @@ class QuizTest extends TestCase
             $this->assertSame(404, $status, "$method by another member");
         }
 
+        // A guest has no attempts: theirs to see or anyone's.
         [$status] = $this->json('GET', '/api/quiz-attempts/'.$paper['id']);
-        $this->assertSame(401, $status);
+        $this->assertSame(404, $status);
 
         $this->assertNull($this->database()->table('quiz_attempts')->where('id', $paper['id'])->value('submitted_at'));
     }
@@ -390,9 +397,9 @@ class QuizTest extends TestCase
 
         // Another member cannot change carol's choice back.
         $this->json('PATCH', '/api/users/3', 2, ['data' => ['type' => 'users', 'id' => '3', 'attributes' => ['quizPrivate' => false]]]);
-        $this->assertTrue((bool) $this->database()->table('users')->where('id', 3)->value('quiz_private'));
+        $this->assertSame(1, $this->database()->table('quiz_leaderboard_opt_outs')->where('user_id', 3)->count());
 
-        foreach (['/api/quizzes/'.$quiz['id'].'/leaderboard', '/api/quiz-leaderboard'] as $path) {
+        foreach (['/api/quizzes/'.$quiz['id'].'/leaderboard', '/api/quizzes/leaderboard'] as $path) {
             [, $seen] = $this->json('GET', $path, 2);
             $names = array_map(fn ($row) => $row['user']['username'], $seen['data']);
             $this->assertNotContains('carol', $names, $path);
@@ -407,7 +414,7 @@ class QuizTest extends TestCase
         }
 
         [, $users] = $this->json('GET', '/api/users/3', 2);
-        $this->assertArrayNotHasKey('quizPrivate', $users['data']['attributes']);
+        $this->assertArrayNotHasKey('quizPrivate', $users['data']);
     }
 
     #[Test]
@@ -670,5 +677,81 @@ class QuizTest extends TestCase
         $this->assertSame(range(0, 199), $rows->pluck('position')->map(fn ($p) => (int) $p)->all());
         $this->assertSame((int) $saved[199]['id'], (int) $rows[199]->id);
         $this->assertSame(0, $this->database()->table('quiz_questions')->where('id', $saved[0]['id'])->count());
+    }
+
+    #[Test]
+    public function a_guest_writes_nothing(): void
+    {
+        $quiz = $this->quiz();
+        $paper = $this->start($quiz['id']);
+
+        foreach ([
+            ['POST', '/api/quizzes', ['data' => ['type' => 'quizzes', 'attributes' => ['title' => 'Guest']]]],
+            ['PATCH', '/api/quizzes/'.$quiz['id'], ['data' => ['type' => 'quizzes', 'id' => (string) $quiz['id'], 'attributes' => ['title' => 'Guest']]]],
+            ['DELETE', '/api/quizzes/'.$quiz['id'], null],
+            ['DELETE', '/api/quizzes/'.$quiz['id'].'/results/2', null],
+            ['POST', '/api/quiz-attempts', ['data' => ['type' => 'quiz-attempts', 'attributes' => ['quizId' => $quiz['id']]]]],
+            ['PATCH', '/api/quiz-attempts/'.$paper['id'], ['data' => ['type' => 'quiz-attempts', 'id' => (string) $paper['id'], 'attributes' => ['answers' => [], 'submit' => true]]]],
+            ['GET', '/api/quizzes/editor', null],
+        ] as [$method, $path, $body]) {
+            [$status] = $this->json($method, $path, null, $body);
+            $this->assertContains($status, [401, 404], "$method $path");
+        }
+
+        $this->assertSame('Capitals', $this->database()->table('quizzes')->where('id', $quiz['id'])->value('title'));
+        $this->assertSame(1, $this->database()->table('quiz_attempts')->count());
+        $this->assertNull($this->database()->table('quiz_attempts')->value('submitted_at'));
+    }
+
+    #[Test]
+    public function the_list_shows_published_quizzes_and_a_writers_own_drafts_on_request(): void
+    {
+        $this->quiz(['title' => 'European Capitals']);
+        $popular = $this->quiz(['title' => 'Rivers']);
+        $draft = $this->quiz(['title' => 'Unfinished capitals', 'status' => 'draft']);
+        $this->submit($this->start($popular['id'])['id'], []);
+
+        $titles = function (string $query, ?int $actor = 1) {
+            [$status, $body, $raw] = $this->json('GET', '/api/quizzes'.$query, $actor);
+            $this->assertSame(200, $status, $raw);
+
+            return array_column($body['data'], 'title');
+        };
+
+        $this->assertSame(['Rivers', 'European Capitals'], $titles(''), 'drafts stay off the shared list, even for their writer');
+        $this->assertSame(['European Capitals'], $titles('?filter[q]=CAPITALS'), 'a search ignores case');
+        $this->assertSame('Rivers', $titles('?sort=-attemptCount,-publishedAt')[0]);
+        $this->assertContains('Unfinished capitals', $titles('?filter[mine]=1'));
+        $this->assertSame([], $titles('?filter[mine]=1', null), 'a guest has no quizzes of their own');
+        $this->assertSame(['Unfinished capitals'], $titles('?filter[ids]='.$draft['id']), 'a writer sees their linked draft');
+        $this->assertSame([], $titles('?filter[ids]='.$draft['id'], 2), 'a member does not');
+    }
+
+    #[Test]
+    public function the_editor_offers_rewards_only_to_rewarders(): void
+    {
+        [$status, $body] = $this->json('GET', '/api/quizzes/editor', 1);
+        $this->assertSame(200, $status);
+        $this->assertTrue($body['meta']['canReward']);
+        $this->assertFalse($body['meta']['badges'], 'FoF Badges is not enabled here');
+
+        [$status] = $this->json('GET', '/api/quizzes/editor', 2);
+        $this->assertSame(403, $status, 'members do not write quizzes by default');
+    }
+
+    #[Test]
+    public function a_second_start_while_the_first_is_being_dealt_is_told_to_wait(): void
+    {
+        $quiz = $this->quiz();
+        $lock = $this->app()->getContainer()->make('cache.store')->getStore()->lock('ernestdefoe-brainstorm.start.'.$quiz['id'].'.2', 10);
+        $this->assertTrue($lock->get());
+
+        [$status, $body, $raw] = $this->json('POST', '/api/quizzes/'.$quiz['id'].'/attempts', 2);
+        $lock->release();
+
+        $this->assertSame(422, $status, $raw);
+        $this->assertSame('/data/attributes/attempt', $body['errors'][0]['source']['pointer']);
+        $this->assertSame(0, $this->database()->table('quiz_attempts')->count());
+        $this->assertSame(201, $this->json('POST', '/api/quizzes/'.$quiz['id'].'/attempts', 2)[0], 'and may start once it is done');
     }
 }

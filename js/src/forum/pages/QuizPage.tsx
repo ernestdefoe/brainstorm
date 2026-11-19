@@ -73,67 +73,84 @@ export default class QuizPage extends Page {
           {this.windowNote(quiz)}
           {quiz.descriptionHtml ? <div className="BrainstormQuizPage-description Post-body">{m.trust(quiz.descriptionHtml)}</div> : null}
 
-          {quiz.canEdit ? (
-            <div className="BrainstormQuizPage-tools">
-              <LinkButton className="Button" icon="fas fa-pen" href={app.route('brainstorm.edit', { id: quiz.id })}>
-                {t('quiz.edit')}
-              </LinkButton>
-              <Button className="Button" icon="far fa-copy" onclick={() => this.copyLink(quiz)}>
-                {t('quiz.copy_link')}
-              </Button>
-              <Button className="Button Button--danger" icon="fas fa-trash" onclick={() => this.remove(quiz)}>
-                {t('quiz.delete')}
-              </Button>
-            </div>
-          ) : null}
+          {quiz.canEdit ? this.tools(quiz) : null}
 
-          {this.playing ? (
-            <div className="BrainstormQuizPage-play BrainstormCard is-playing">
-              <Player
-                quiz={quiz}
-                onfinish={(result: Result) => {
-                  recordFinish(quiz, result);
-                  this.boardKey++;
-                }}
-                onclose={() => {
-                  this.playing = false;
-                }}
-              />
-            </div>
-          ) : (
-            <div className="BrainstormCard-footer BrainstormQuizPage-cta">
-              {quizStanding(quiz)}
-              {quizAction(quiz, () => (this.playing = true))}
-            </div>
-          )}
+          {this.play(quiz)}
         </div>
 
-        <aside className="BrainstormQuizPage-side">
-          {quiz.canEdit ? (
-            <div className="BrainstormTabs" role="tablist">
-              {(['board', 'results'] as const).map((tab) => (
-                <Button
-                  className={'Button Button--flat' + (this.tab === tab ? ' active' : '')}
-                  role="tab"
-                  aria-selected={this.tab === tab}
-                  onclick={() => (this.tab = tab)}
-                >
-                  {t('quiz.tabs.' + tab)}
-                </Button>
-              ))}
-            </div>
-          ) : (
-            <h3>{t('leaderboard.title')}</h3>
-          )}
-          {this.tab === 'results' && quiz.canEdit ? (
-            <ResultsPanel quiz={quiz} />
-          ) : quiz.leaderboard ? (
-            [<Leaderboard key={this.boardKey} quizId={quiz.id} />]
-          ) : (
-            <p className="BrainstormBoard-empty">{t('leaderboard.off')}</p>
-          )}
-        </aside>
+        {this.side(quiz)}
       </div>
+    );
+  }
+
+  /** Editing, sharing and deleting, for people who may edit it. */
+  tools(quiz: Quiz): Mithril.Children {
+    return (
+      <div className="BrainstormQuizPage-tools">
+        <LinkButton className="Button" icon="fas fa-pen" href={app.route('brainstorm.edit', { id: quiz.id })}>
+          {t('quiz.edit')}
+        </LinkButton>
+        <Button className="Button" icon="far fa-copy" onclick={() => this.copyLink(quiz)}>
+          {t('quiz.copy_link')}
+        </Button>
+        <Button className="Button Button--danger" icon="fas fa-trash" onclick={() => this.remove(quiz)}>
+          {t('quiz.delete')}
+        </Button>
+      </div>
+    );
+  }
+
+  /** The player once started; until then the member's standing and the way in. */
+  play(quiz: Quiz): Mithril.Children {
+    return this.playing ? (
+      <div className="BrainstormQuizPage-play BrainstormCard is-playing">
+        <Player
+          quiz={quiz}
+          onfinish={(result: Result) => {
+            recordFinish(quiz, result);
+            this.boardKey++;
+          }}
+          onclose={() => {
+            this.playing = false;
+          }}
+        />
+      </div>
+    ) : (
+      <div className="BrainstormCard-footer BrainstormQuizPage-cta">
+        {quizStanding(quiz)}
+        {quizAction(quiz, () => (this.playing = true))}
+      </div>
+    );
+  }
+
+  /** The leaderboard, and for its editors the results beside it. */
+  side(quiz: Quiz): Mithril.Children {
+    return (
+      <aside className="BrainstormQuizPage-side">
+        {quiz.canEdit ? (
+          <div className="BrainstormTabs" role="tablist">
+            {(['board', 'results'] as const).map((tab) => (
+              <Button
+                className={'Button Button--flat' + (this.tab === tab ? ' active' : '')}
+                role="tab"
+                aria-selected={this.tab === tab}
+                onclick={() => (this.tab = tab)}
+              >
+                {t('quiz.tabs.' + tab)}
+              </Button>
+            ))}
+          </div>
+        ) : (
+          <h3>{t('leaderboard.title')}</h3>
+        )}
+        {this.tab === 'results' && quiz.canEdit ? (
+          <ResultsPanel quiz={quiz} />
+        ) : quiz.leaderboard ? (
+          [<Leaderboard key={this.boardKey} quizId={quiz.id} />]
+        ) : (
+          <p className="BrainstormBoard-empty">{t('leaderboard.off')}</p>
+        )}
+      </aside>
     );
   }
 

@@ -16,6 +16,7 @@ ernestdefoe-brainstorm:
     no_attempts_left: You have used all your attempts at this quiz.
     no_questions: This quiz has no questions yet.
     slow_down: Too many requests in a short time. Wait a few minutes and try again.
+    busy: Still starting your attempt. Try again in a moment.
 
   # Shared by the forum and the admin.
   lib:

@@ -2,21 +2,14 @@
 
 namespace ErnestDefoe\Brainstorm;
 
-use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\User;
 
 /**
- * Who may do what to a quiz. Every controller asks here, so the rules live in
- * one place.
+ * Who may do what to a quiz. The policies, resources and visibility scopes
+ * ask here, so the rules live in one place.
  */
 class Access
 {
-    public static function canView(User $actor, Quiz $quiz): bool
-    {
-        return $actor->hasPermission('brainstorm.view')
-            && ($quiz->isPublished() || self::canEdit($actor, $quiz));
-    }
-
     public static function canCreate(User $actor): bool
     {
         return ! $actor->isGuest() && ($actor->hasPermission('brainstorm.create') || $actor->hasPermission('brainstorm.manage'));
@@ -49,11 +42,12 @@ class Access
      * unless the forum counts them (an admin who had AI write the questions
      * never saw the answers) and the quiz is open to everyone. A draft or a
      * quiz still waiting to open is always practice.
+     *
+     * @param bool $editorsCount the forum's `ernestdefoe-brainstorm.editors_count` setting
      */
-    public static function practises(User $actor, Quiz $quiz): bool
+    public static function practises(User $actor, Quiz $quiz, bool $editorsCount): bool
     {
-        return self::canEdit($actor, $quiz)
-            && ! ($quiz->isOpen() && resolve(SettingsRepositoryInterface::class)->get('ernestdefoe-brainstorm.editors_count'));
+        return self::canEdit($actor, $quiz) && ! ($quiz->isOpen() && $editorsCount);
     }
 
     /** Editors may always try their quiz, drafts included: as practice. */

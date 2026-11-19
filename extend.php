@@ -9,20 +9,23 @@
  * is what leaderboards, badges, points and Onramp read.
  */
 
+use ErnestDefoe\Brainstorm\Access;
 use ErnestDefoe\Brainstorm\Api;
+use ErnestDefoe\Brainstorm\Attempt;
 use ErnestDefoe\Brainstorm\Content\QuizDocument;
 use ErnestDefoe\Brainstorm\Event\AttemptFinished;
 use ErnestDefoe\Brainstorm\Integration\Badges\BadgesProvider;
+use ErnestDefoe\Brainstorm\Integration\Gamification\GamificationProvider;
 use ErnestDefoe\Brainstorm\Integration\Onramp\PassQuizzesStep;
+use ErnestDefoe\Brainstorm\Integration\Rewards\RewardsProvider;
 use ErnestDefoe\Brainstorm\Listener\PayRewards;
+use ErnestDefoe\Brainstorm\Quiz;
+use ErnestDefoe\Brainstorm\Search;
 use ErnestDefoe\Brainstorm\Widget\QuizzesBlock;
-use ErnestDefoe\Brainstorm\Access;
-use Flarum\Api\Context;
 use Flarum\Api\Resource\ForumResource;
 use Flarum\Api\Resource\UserResource;
-use Flarum\Api\Schema;
 use Flarum\Extend;
-use Flarum\User\User;
+use Flarum\Search\Database\DatabaseSearchDriver;
 
 return [
     (new Extend\Frontend('forum'))
@@ -43,21 +46,24 @@ return [
 
     new Extend\Locales(__DIR__.'/locale'),
 
-    (new Extend\Routes('api'))
-        ->get('/quizzes', 'brainstorm.quizzes.index', Api\ListQuizzesController::class)
-        ->post('/quizzes', 'brainstorm.quizzes.create', Api\SaveQuizController::class)
-        ->get('/quiz-editor', 'brainstorm.editor', Api\EditorController::class)
-        ->get('/quiz-leaderboard', 'brainstorm.leaderboard', Api\LeaderboardController::class)
-        ->get('/quizzes/{id:[0-9]+}', 'brainstorm.quizzes.show', Api\ShowQuizController::class)
-        ->patch('/quizzes/{id:[0-9]+}', 'brainstorm.quizzes.update', Api\SaveQuizController::class)
-        ->delete('/quizzes/{id:[0-9]+}', 'brainstorm.quizzes.delete', Api\DeleteQuizController::class)
-        ->post('/quizzes/{id:[0-9]+}/attempts', 'brainstorm.attempts.start', Api\StartAttemptController::class)
-        ->get('/quizzes/{id:[0-9]+}/leaderboard', 'brainstorm.quizzes.leaderboard', Api\LeaderboardController::class)
-        ->get('/quizzes/{id:[0-9]+}/results', 'brainstorm.quizzes.results', Api\ResultsController::class)
-        ->delete('/quizzes/{id:[0-9]+}/results/{user:[0-9]+}', 'brainstorm.quizzes.reset', Api\ResultsController::class)
-        ->get('/quiz-attempts/{id:[0-9]+}', 'brainstorm.attempts.show', Api\AttemptController::class)
-        ->patch('/quiz-attempts/{id:[0-9]+}', 'brainstorm.attempts.save', Api\AttemptController::class)
-        ->post('/quiz-attempts/{id:[0-9]+}/submit', 'brainstorm.attempts.submit', Api\AttemptController::class),
+    new Extend\ApiResource(Api\Resource\QuizResource::class),
+    new Extend\ApiResource(Api\Resource\AttemptResource::class),
+
+    (new Extend\SearchDriver(DatabaseSearchDriver::class))
+        ->addSearcher(Quiz::class, Search\QuizSearcher::class)
+        ->addFilter(Search\QuizSearcher::class, Search\Filter\IdsFilter::class)
+        ->addFilter(Search\QuizSearcher::class, Search\Filter\MineFilter::class)
+        ->addFilter(Search\QuizSearcher::class, Search\Filter\StatusFilter::class)
+        ->setFulltext(Search\QuizSearcher::class, Search\QuizFulltext::class),
+
+    (new Extend\ModelVisibility(Quiz::class))
+        ->scope(Access\ScopeQuizVisibility::class),
+    (new Extend\ModelVisibility(Attempt::class))
+        ->scope(Access\ScopeAttemptVisibility::class),
+
+    (new Extend\Policy())
+        ->modelPolicy(Quiz::class, Access\QuizPolicy::class)
+        ->modelPolicy(Attempt::class, Access\AttemptPolicy::class),
 
     (new Extend\Event())
         ->listen(AttemptFinished::class, PayRewards::class),
@@ -67,31 +73,22 @@ return [
         ->default('ernestdefoe-brainstorm.editors_count', false)
         ->serializeToForum('brainstormShowNav', 'ernestdefoe-brainstorm.show_nav', 'boolval'),
 
-    // Both are permissions the actor's groups were already loaded for: no query.
     (new Extend\ApiResource(ForumResource::class))
-        ->fields(fn () => [
-            Schema\Boolean::make('canViewQuizzes')
-                ->get(fn ($forum, Context $context) => $context->getActor()->hasPermission('brainstorm.view')),
-            Schema\Boolean::make('canCreateQuizzes')
-                ->get(fn ($forum, Context $context) => Access::canCreate($context->getActor())),
-        ]),
+        ->fields(Api\Fields\ForumFields::class),
 
-    (new Extend\Model(User::class))
-        ->cast('quiz_private', 'boolean'),
-
-    // The member's own "keep me off quiz leaderboards" choice, on their own
-    // user only: read and written by them, invisible to everyone else.
     (new Extend\ApiResource(UserResource::class))
-        ->fields(fn () => [
-            Schema\Boolean::make('quizPrivate')
-                ->property('quiz_private')
-                ->visible(fn (User $user, Context $context) => $context->getActor()->id === $user->id)
-                ->writable(fn (User $user, Context $context) => $context->getActor()->id === $user->id),
-        ]),
+        ->fields(Api\Fields\UserFields::class),
+
+    // No rewards unless FoF Badges or FoF Gamification bind theirs below.
+    (new Extend\ServiceProvider())
+        ->register(RewardsProvider::class),
 
     (new Extend\Conditional())
         ->whenExtensionEnabled('fof-badges', fn () => [
             (new Extend\ServiceProvider())->register(BadgesProvider::class),
+        ])
+        ->whenExtensionEnabled('fof-gamification', fn () => [
+            (new Extend\ServiceProvider())->register(GamificationProvider::class),
         ])
         ->whenExtensionEnabled('ernestdefoe-onramp', fn () => [
             (new \ErnestDefoe\Onramp\Extend\StepTypes())->add(PassQuizzesStep::class),

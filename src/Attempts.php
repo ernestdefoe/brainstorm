@@ -5,7 +5,10 @@ namespace ErnestDefoe\Brainstorm;
 use Carbon\Carbon;
 use ErnestDefoe\Brainstorm\Event\AttemptFinished;
 use Flarum\Foundation\ValidationException;
+use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\User;
+use Illuminate\Contracts\Cache\LockProvider;
+use Illuminate\Contracts\Cache\Repository as Cache;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Collection;
@@ -18,6 +21,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * 🚨 The server is the only judge. The answer key never leaves it, the
  * deadline is its own clock's, the attempt limit is counted under a lock, and
  * a submission is marked exactly once however many copies of it arrive.
+ * A member has at most one attempt open at a quiz (starting is locked), so
+ * their best row there is only ever written by one submission at a time.
  */
 class Attempts
 {
@@ -28,8 +33,16 @@ class Attempts
         private ConnectionInterface $db,
         private Dispatcher $events,
         private TranslatorInterface $translator,
-        private LoggerInterface $log
+        private LoggerInterface $log,
+        private Cache $cache,
+        private SettingsRepositoryInterface $settings
     ) {
+    }
+
+    /** {@see Access::practises()} with this forum's setting. */
+    public function practises(User $user, Quiz $quiz): bool
+    {
+        return Access::practises($user, $quiz, (bool) $this->settings->get('ernestdefoe-brainstorm.editors_count'));
     }
 
     /** Attempts the member has used at this quiz, the one in progress included. */
@@ -53,11 +66,7 @@ class Attempts
     {
         $this->expireOverdue($quiz, $user);
 
-        $attempt = $this->db->transaction(function () use ($quiz, $user, $practice) {
-            // Lock the quiz row so two "start" clicks can't both slip under
-            // the attempt limit. (SQLite serialises writers on its own.)
-            Quiz::query()->whereKey($quiz->id)->lockForUpdate()->first();
-
+        $attempt = $this->locked($quiz, $user, fn () => $this->db->transaction(function () use ($quiz, $user, $practice) {
             if ($open = $this->open($quiz, $user)) {
                 return $open;
             }
@@ -90,7 +99,7 @@ class Attempts
             $attempt->save();
 
             return $attempt;
-        });
+        }));
 
         $attempt->setRelation('quiz', $quiz);
 
@@ -113,8 +122,8 @@ class Attempts
     }
 
     /**
-     * Mark the attempt. Answers sent after the deadline (and its grace) are
-     * not taken: an overdue attempt is marked on what was saved in time.
+     * Mark the attempt, in place. Answers sent after the deadline (and its
+     * grace) are not taken: an overdue attempt is marked on what was saved in time.
      */
     public function submit(Attempt $attempt, mixed $answers = null): Attempt
     {
@@ -128,16 +137,51 @@ class Attempts
         $overdue = $attempt->isOverdue();
         // Someone who could see the key by now (made an editor mid-attempt)
         // is practising, whatever they were when they started.
-        $practice = $attempt->practice || Access::practises($user, $quiz);
+        $practice = $attempt->practice || $this->practises($user, $quiz);
 
         if (! $overdue && $answers !== null) {
             $attempt->answers = $this->clean($attempt, $answers, $questions);
         }
 
+        $marked = $this->mark($attempt, $quiz, $questions, $overdue) + ['practice' => $practice];
+        $firstPass = $this->db->transaction(function () use ($attempt, $quiz, $marked) {
+            // Marked once: the update only lands on an unsubmitted row, so a
+            // double click or a retried request can't mark it twice.
+            $won = Attempt::query()->whereKey($attempt->id)->whereNull('submitted_at')->update([
+                'answers' => json_encode($attempt->answers ?: new \stdClass()),
+                'marks' => json_encode($marked['marks'] ?: new \stdClass()),
+            ] + array_diff_key($marked, ['marks' => true]));
+
+            return $won && ! $marked['practice'] ? $this->recordBest($attempt, $quiz, $marked) : null;
+        });
+
+        $attempt->refresh();
+        $attempt->setRelation('quiz', $quiz);
+
+        if ($firstPass !== null) {
+            $quiz->increment('attempt_count');
+            if ($firstPass) {
+                $quiz->increment('pass_count');
+            }
+
+            $this->events->dispatch(new AttemptFinished($attempt, $user, $firstPass));
+        }
+
+        return $attempt;
+    }
+
+    /**
+     * Each question's mark (kept with the attempt: the review shows what was
+     * marked, even if the quiz is edited afterwards), the totals, and when
+     * the attempt counts as finished.
+     *
+     * @param Collection<int, Question> $questions
+     * @return array{submitted_at: Carbon, score: float, max_score: float, percent: float, passed: bool, duration: int, expired: bool, marks: array<int|string, float>}
+     */
+    private function mark(Attempt $attempt, Quiz $quiz, Collection $questions, bool $overdue): array
+    {
         $score = 0.0;
         $max = 0.0;
-        // Each question's mark, kept with the attempt: the review shows what
-        // was marked, even if the quiz is edited afterwards.
         $marks = [];
         foreach ($attempt->questionIds() as $id) {
             if ($question = $questions->get($id)) {
@@ -150,51 +194,19 @@ class Attempts
         $now = Carbon::now();
         $finishedAt = $overdue || ($attempt->deadline_at && $attempt->deadline_at->lt($now)) ? $attempt->deadline_at->copy() : $now;
         $duration = max(0, $finishedAt->getTimestamp() - $attempt->started_at->getTimestamp());
-        if ($quiz->time_limit) {
-            $duration = min($duration, $quiz->time_limit);
-        }
-
         $score = round($score, 2);
-        $percent = $max > 0 ? floor($score / $max * 10000) / 100 : 0.0;
-        // Compared unrounded, so 69.995% never passes a 70% mark.
-        $passed = $max > 0 && $score * 100 >= $quiz->pass_mark * $max - 1e-9;
 
-        $firstPass = $this->db->transaction(function () use ($attempt, $quiz, $score, $max, $percent, $passed, $duration, $finishedAt, $overdue, $practice, $marks) {
-            // Marked once: the update only lands on an unsubmitted row, so a
-            // double click or a retried request can't mark it twice.
-            $won = Attempt::query()->whereKey($attempt->id)->whereNull('submitted_at')->update([
-                'submitted_at' => $finishedAt,
-                'answers' => json_encode($attempt->answers ?: new \stdClass()),
-                'score' => $score,
-                'max_score' => $max,
-                'percent' => $percent,
-                'passed' => $passed,
-                'duration' => $duration,
-                'expired' => $overdue,
-                'practice' => $practice,
-                'marks' => json_encode($marks ?: new \stdClass()),
-            ]);
-
-            if (! $won || $practice) {
-                return null;
-            }
-
-            return $this->recordBest($attempt, $quiz, $score, $percent, $passed, $duration, $finishedAt);
-        });
-
-        $fresh = Attempt::query()->findOrFail($attempt->id);
-        $fresh->setRelation('quiz', $quiz);
-
-        if ($firstPass !== null) {
-            $quiz->increment('attempt_count');
-            if ($firstPass) {
-                $quiz->increment('pass_count');
-            }
-
-            $this->events->dispatch(new AttemptFinished($fresh, $user, $firstPass));
-        }
-
-        return $fresh;
+        return [
+            'submitted_at' => $finishedAt,
+            'score' => $score,
+            'max_score' => $max,
+            'percent' => $max > 0 ? floor($score / $max * 10000) / 100 : 0.0,
+            // Compared unrounded, so 69.995% never passes a 70% mark.
+            'passed' => $max > 0 && $score * 100 >= $quiz->pass_mark * $max - 1e-9,
+            'duration' => $quiz->time_limit ? min($duration, $quiz->time_limit) : $duration,
+            'expired' => $overdue,
+            'marks' => $marks,
+        ];
     }
 
     /**
@@ -233,10 +245,10 @@ class Attempts
     {
         $this->db->transaction(function () use ($quiz, $userId) {
             Attempt::query()->where('quiz_id', $quiz->id)->where('user_id', $userId)->delete();
-            $this->db->table('quiz_bests')->where('quiz_id', $quiz->id)->where('user_id', $userId)->delete();
+            Best::query()->where('quiz_id', $quiz->id)->where('user_id', $userId)->delete();
 
             $quiz->attempt_count = Attempt::query()->where('quiz_id', $quiz->id)->whereNotNull('submitted_at')->where('practice', false)->count();
-            $quiz->pass_count = $this->db->table('quiz_bests')->where('quiz_id', $quiz->id)->where('passed', true)->count();
+            $quiz->pass_count = Best::query()->where('quiz_id', $quiz->id)->where('passed', true)->count();
             $quiz->save();
         });
     }
@@ -244,23 +256,26 @@ class Attempts
     /**
      * Keep the member's best attempt (higher score, then faster) and count
      * the attempt. Returns whether this was their first pass.
+     *
+     * @param array{submitted_at: Carbon, score: float, percent: float, passed: bool, duration: int} $marked
      */
-    private function recordBest(Attempt $attempt, Quiz $quiz, float $score, float $percent, bool $passed, int $duration, Carbon $at): bool
+    private function recordBest(Attempt $attempt, Quiz $quiz, array $marked): bool
     {
-        $table = $this->db->table('quiz_bests');
         $key = ['quiz_id' => $quiz->id, 'user_id' => $attempt->user_id];
-        $best = (clone $table)->where($key)->lockForUpdate()->first();
+        $best = Best::query()->where($key)->first();
+        $passed = $marked['passed'];
+        $at = $marked['submitted_at'];
 
         $row = [
             'attempt_id' => $attempt->id,
-            'score' => $score,
-            'percent' => $percent,
-            'duration' => $duration,
+            'score' => $marked['score'],
+            'percent' => $marked['percent'],
+            'duration' => $marked['duration'],
             'achieved_at' => $at,
         ];
 
         if (! $best) {
-            (clone $table)->insert($key + $row + [
+            Best::query()->insert($key + $row + [
                 'passed' => $passed,
                 'attempts' => 1,
                 'first_passed_at' => $passed ? $at : null,
@@ -273,18 +288,46 @@ class Attempts
         // it on an `answers_always` quiz, and an `answers` quiz shows it once
         // passed — a retake can't climb the leaderboard with it.
         $keySeen = $quiz->reveal === 'answers_always' || ($quiz->reveal === 'answers' && $best->passed);
-        $better = ! $keySeen && ($percent > (float) $best->percent
-            || ($percent == (float) $best->percent && $duration < (int) $best->duration));
-        $firstPass = $passed && $best->first_passed_at === null;
+        $better = ! $keySeen && ($row['percent'] > $best->percent
+            || ($row['percent'] == $best->percent && $row['duration'] < $best->duration));
 
-        (clone $table)->where($key)->update(($better ? $row : []) + [
-            'attempts' => (int) $best->attempts + 1,
+        Best::query()->where($key)->update(($better ? $row : []) + [
+            'attempts' => $best->attempts + 1,
             // "Has passed", never taken back by a weaker later attempt.
-            'passed' => $passed || (bool) $best->passed,
+            'passed' => $passed || $best->passed,
             'first_passed_at' => $best->first_passed_at ?? ($passed ? $at : null),
         ]);
 
-        return $firstPass;
+        return $passed && $best->first_passed_at === null;
+    }
+
+    /**
+     * Run a member's start of an attempt alone, so two "start" clicks can't
+     * both slip under the attempt limit or open two attempts. Never waits:
+     * a second click while the first is being dealt is told to try again.
+     *
+     * @template T
+     * @param callable(): T $work
+     * @return T
+     */
+    private function locked(Quiz $quiz, User $user, callable $work): mixed
+    {
+        // Every cache store Flarum ships (file, array, redis) can lock.
+        $store = $this->cache->getStore();
+        if (! $store instanceof LockProvider) {
+            return $work();
+        }
+
+        $lock = $store->lock("ernestdefoe-brainstorm.start.$quiz->id.$user->id", 10);
+        if (! $lock->get()) {
+            throw new ValidationException(['attempt' => $this->translator->trans('ernestdefoe-brainstorm.api.busy')]);
+        }
+
+        try {
+            return $work();
+        } finally {
+            $lock->release();
+        }
     }
 
     /** @return Collection<int, Question> this attempt's questions that still exist, by id */

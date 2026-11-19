@@ -41,13 +41,13 @@ class QueryCountTest extends TestCase
     public function mentions_in_many_quizzes_are_looked_up_once(): void
     {
         for ($i = 0; $i < 5; $i++) {
-            $response = $this->send($this->request('POST', '/api/quizzes', ['authenticatedAs' => 1, 'json' => ['data' => [
+            $response = $this->send($this->request('POST', '/api/quizzes', ['authenticatedAs' => 1, 'json' => ['data' => ['type' => 'quizzes', 'attributes' => [
                 'title' => "Quiz $i",
                 // The form the composer writes: display name and id.
                 'description' => "Thanks @\"normal\"#2 and @\"admin\"#1 ($i)",
                 'status' => 'published',
                 'questions' => [['type' => 'boolean', 'body' => 'Yes?', 'options' => [['id' => 'true', 'correct' => true]]]],
-            ]]]));
+            ]]]]));
             $this->assertSame(201, $response->getStatusCode(), substr((string) $response->getBody(), 0, 1500));
         }
 

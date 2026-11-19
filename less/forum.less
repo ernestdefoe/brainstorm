@@ -745,8 +745,16 @@
   gap: 8px;
 }
 .BrainstormEditor-settings {
+  min-width: 0;
+
   .Form-group {
     margin-bottom: 14px;
+  }
+  // A long option ("The answers, after passing or running out of attempts")
+  // would otherwise widen the select past the column.
+  .Select,
+  .Select-input {
+    max-width: 100%;
   }
   // Core's toggle is taller than a line of text; without a min-height the
   // rows overlap, and a wrapped label slides under the next toggle.

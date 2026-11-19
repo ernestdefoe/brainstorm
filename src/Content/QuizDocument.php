@@ -29,7 +29,7 @@ class QuizDocument
         if ($id < 1 || $id > 2147483647) {
             return $document;
         }
-        $quiz = Quiz::query()->visibleTo(RequestUtil::getActor($request))->find($id);
+        $quiz = Quiz::query()->whereVisibleTo(RequestUtil::getActor($request))->find($id);
 
         if (! $quiz) {
             return $document;

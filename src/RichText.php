@@ -5,6 +5,7 @@ namespace ErnestDefoe\Brainstorm;
 use Flarum\Formatter\Formatter;
 use Flarum\User\User;
 use Illuminate\Database\Eloquent\Collection;
+use Psr\Log\LoggerInterface;
 use s9e\TextFormatter\Utils;
 
 /**
@@ -16,7 +17,7 @@ use s9e\TextFormatter\Utils;
  */
 class RichText
 {
-    public function __construct(protected Formatter $formatter)
+    public function __construct(protected Formatter $formatter, private LoggerInterface $log)
     {
     }
 
@@ -37,8 +38,10 @@ class RichText
 
         try {
             return $this->formatter->render($stored, $context);
-        } catch (\Throwable) {
-            // Never let a formatter hiccup take the page down: show the text.
+        } catch (\Throwable $e) {
+            // Never let a formatter hiccup take the page down: log it and show the text.
+            $this->log->warning('[brainstorm] could not render quiz '.$context->id.' text: '.$e->getMessage());
+
             return '<p>'.nl2br(e(strip_tags($stored))).'</p>';
         }
     }

@@ -2,9 +2,9 @@
 
 namespace ErnestDefoe\Brainstorm;
 
-use Flarum\Extension\ExtensionManager;
+use ErnestDefoe\Brainstorm\Integration\Rewards\BadgeSource;
+use ErnestDefoe\Brainstorm\Integration\Rewards\PointSource;
 use Flarum\User\User;
-use Illuminate\Contracts\Container\Container;
 
 /**
  * Paying out for a first pass: FoF Gamification points and a FoF Badges badge.
@@ -13,27 +13,47 @@ use Illuminate\Contracts\Container\Container;
  * a badge is held once — so a reward can't be paid twice, even after an
  * admin resets a member's attempts and they pass again.
  *
- * 🚨 Both FoF extensions are optional and resolved by NAME when paying.
- * Nothing here imports them, so Brainstorm loads the same with either, both or
- * neither installed.
+ * Both FoF extensions are optional: each source is bound by a provider that
+ * extend.php registers only while that extension is enabled, and is "none"
+ * otherwise. Nothing here names a FoF class.
  */
 class Rewards
 {
-    /** fof/gamification's point-grants seam; absent from versions before it. */
-    public const POINT_GRANTS = 'FoF\Gamification\PointGrants';
-
-    public function __construct(private ExtensionManager $extensions, private Container $container)
+    public function __construct(private BadgeSource $badges, private PointSource $points)
     {
     }
 
     public function pointsAvailable(): bool
     {
-        return $this->extensions->isEnabled('fof-gamification') && class_exists(self::POINT_GRANTS);
+        return $this->points->available();
     }
 
     public function badgesAvailable(): bool
     {
-        return $this->extensions->isEnabled('fof-badges') && class_exists('FoF\Badges\Badge');
+        return $this->badges->available();
+    }
+
+    public function badges(): BadgeSource
+    {
+        return $this->badges;
+    }
+
+    /**
+     * What the quiz editor may offer this actor.
+     *
+     * @return array{canReward: bool, points: bool, badges: bool, badgeList: list<array<string, mixed>>}
+     */
+    public function editorOptions(User $actor): array
+    {
+        $canReward = Access::canReward($actor);
+        $badges = $canReward && $this->badges->available();
+
+        return [
+            'canReward' => $canReward,
+            'points' => $canReward && $this->points->available(),
+            'badges' => $badges,
+            'badgeList' => $badges ? $this->badges->all() : [],
+        ];
     }
 
     public function pay(Quiz $quiz, User $user): void
@@ -43,16 +63,10 @@ class Rewards
             return;
         }
 
-        if ($quiz->reward_points !== 0 && $this->pointsAvailable()) {
-            $this->container->make(self::POINT_GRANTS)->grant($user, 'brainstorm', 'quiz:'.$quiz->id, $quiz->reward_points);
-        }
+        $this->points->grant($user, 'quiz:'.$quiz->id, $quiz->reward_points);
 
-        if ($quiz->reward_badge_id && $this->badgesAvailable()) {
-            $badge = \FoF\Badges\Badge::query()->find($quiz->reward_badge_id);
-
-            if ($badge) {
-                $this->container->make('FoF\Badges\BadgeAwarder')->award($user, $badge, \FoF\Badges\UserBadge::GRANTED_BY_SYSTEM);
-            }
+        if ($quiz->reward_badge_id) {
+            $this->badges->award($user, $quiz->reward_badge_id);
         }
     }
 }

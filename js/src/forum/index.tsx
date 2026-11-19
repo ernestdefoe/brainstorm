@@ -8,18 +8,15 @@ import Button from 'flarum/common/components/Button';
 import scan from './embed/scan';
 import registerWidgets from './widgets';
 
+export { default as extend } from './extend';
+
 /*
  * Everything here runs on every page for every visitor, so it is only the
- * wiring. The pages, the player, the editor and the in-post card are their
- * own chunks, fetched the first time something needs them.
+ * wiring; the routes are in extend.ts. The pages, the player, the editor and
+ * the in-post card are their own chunks, fetched the first time something
+ * needs them.
  */
 app.initializers.add('ernestdefoe-brainstorm', () => {
-  app.routes['brainstorm.index'] = { path: '/quizzes', component: () => import('./pages/QuizzesPage') };
-  app.routes['brainstorm.new'] = { path: '/quizzes/new', component: () => import('./pages/EditorPage') };
-  app.routes['brainstorm.leaderboard'] = { path: '/quizzes/leaderboard', component: () => import('./pages/LeaderboardPage') };
-  app.routes['brainstorm.quiz'] = { path: '/quizzes/:id', component: () => import('./pages/QuizPage') };
-  app.routes['brainstorm.edit'] = { path: '/quizzes/:id/edit', component: () => import('./pages/EditorPage') };
-
   extend(IndexSidebar.prototype, 'navItems', function (items) {
     if (!app.forum.attribute('canViewQuizzes') || app.forum.attribute('brainstormShowNav') === false) return;
 

@@ -56,59 +56,71 @@ export default class ResultsPanel extends Component<{ quiz: Quiz }> {
   view(): Mithril.Children {
     return (
       <div className="BrainstormResults">
-        {this.stats.length ? (
-          <section>
-            <h4>{t('questions')}</h4>
-            <ol className="BrainstormResults-questions">
-              {this.stats.map((s) => (
-                <li>
-                  <span className="BrainstormResults-question">{s.text}</span>
-                  <span className="BrainstormResults-bar" title={extractText(t('asked', { count: s.asked }))}>
-                    <span style={{ width: s.correct + '%' }} />
-                  </span>
-                  <span className="BrainstormResults-value">{s.asked ? percent(s.correct) : '—'}</span>
-                </li>
-              ))}
-            </ol>
-          </section>
-        ) : null}
+        {this.stats.length ? this.questions() : null}
 
-        <section>
-          <h4>{t('attempts')}</h4>
-          {this.rows.length ? (
-            <ul className="BrainstormResults-attempts">
-              {this.rows.map((r) => (
-                <li className={r.passed ? 'is-passed' : ''}>
-                  {r.user ? personLink(r.user) : <span>{t('deleted_user')}</span>}
-                  <span className="BrainstormResults-value">{percent(r.percent)}</span>
-                  <span className="BrainstormResults-meta">
-                    {clock(r.duration)} · {humanTime(new Date(r.submittedAt))}
-                    {r.practice ? ' · ' + extractText(t('practice')) : ''}
-                    {r.expired ? ' · ' + extractText(t('expired')) : ''}
-                  </span>
-                  {r.user ? (
-                    <Button
-                      className="Button Button--icon Button--link"
-                      icon="fas fa-rotate-left"
-                      aria-label={extractText(t('reset'))}
-                      title={extractText(t('reset'))}
-                      onclick={() => this.reset(r.user!)}
-                    />
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          ) : !this.loading ? (
-            <p className="BrainstormBoard-empty">{t('none')}</p>
-          ) : null}
-          {this.loading ? <LoadingIndicator display="block" size="small" /> : null}
-          {!this.loading && this.next ? (
-            <Button className="Button" onclick={() => this.load(this.next!)}>
-              {t('more')}
-            </Button>
-          ) : null}
-        </section>
+        {this.attempts()}
       </div>
+    );
+  }
+
+  /** How often each question was answered right. */
+  questions(): Mithril.Children {
+    return (
+      <section>
+        <h4>{t('questions')}</h4>
+        <ol className="BrainstormResults-questions">
+          {this.stats.map((s) => (
+            <li>
+              <span className="BrainstormResults-question">{s.text}</span>
+              <span className="BrainstormResults-bar" title={extractText(t('asked', { count: s.asked }))}>
+                <span style={{ width: s.correct + '%' }} />
+              </span>
+              <span className="BrainstormResults-value">{s.asked ? percent(s.correct) : '—'}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+    );
+  }
+
+  /** The finished attempts, newest first, each with a reset. */
+  attempts(): Mithril.Children {
+    return (
+      <section>
+        <h4>{t('attempts')}</h4>
+        {this.rows.length ? (
+          <ul className="BrainstormResults-attempts">
+            {this.rows.map((r) => (
+              <li className={r.passed ? 'is-passed' : ''}>
+                {r.user ? personLink(r.user) : <span>{t('deleted_user')}</span>}
+                <span className="BrainstormResults-value">{percent(r.percent)}</span>
+                <span className="BrainstormResults-meta">
+                  {clock(r.duration)} · {humanTime(new Date(r.submittedAt))}
+                  {r.practice ? ' · ' + extractText(t('practice')) : ''}
+                  {r.expired ? ' · ' + extractText(t('expired')) : ''}
+                </span>
+                {r.user ? (
+                  <Button
+                    className="Button Button--icon Button--link"
+                    icon="fas fa-rotate-left"
+                    aria-label={extractText(t('reset'))}
+                    title={extractText(t('reset'))}
+                    onclick={() => this.reset(r.user!)}
+                  />
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        ) : !this.loading ? (
+          <p className="BrainstormBoard-empty">{t('none')}</p>
+        ) : null}
+        {this.loading ? <LoadingIndicator display="block" size="small" /> : null}
+        {!this.loading && this.next ? (
+          <Button className="Button" onclick={() => this.load(this.next!)}>
+            {t('more')}
+          </Button>
+        ) : null}
+      </section>
     );
   }
 }

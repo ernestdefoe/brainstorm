@@ -83,38 +83,48 @@ export default class ResultView extends Component<Attrs> {
           <img className="BrainstormQuestion-image" src={q.imageUrl} alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
         ) : null}
 
-        {q.type === 'text' ? (
-          <div className="BrainstormReview-typed">
-            <span>{t('you_typed')}</span> <strong>{q.typed ?? t('no_answer')}</strong>
-            {q.accepted ? (
-              <div>
-                <span>{t('accepted')}</span> <strong>{q.accepted.join(' · ')}</strong>
-              </div>
-            ) : null}
-          </div>
-        ) : (
-          <ul className="BrainstormReview-options">
-            {q.options.map((o) => (
-              <li
-                className={
-                  'BrainstormReview-option' +
-                  (o.chosen ? ' is-chosen' : '') +
-                  (o.correct === true ? ' is-correct' : '') +
-                  (o.correct === false && o.chosen ? ' is-wrong' : '')
-                }
-              >
-                <Icon name={o.correct ? 'fas fa-check' : o.chosen ? (o.correct === false ? 'fas fa-xmark' : 'fas fa-circle-dot') : 'far fa-circle'} />
-                <span>
-                  {q.type === 'boolean' ? app.translator.trans(`ernestdefoe-brainstorm.forum.player.${o.id === 'true' ? 'true' : 'false'}`) : o.text}
-                </span>
-                {o.chosen ? <span className="BrainstormReview-yours">{t('your_answer')}</span> : null}
-              </li>
-            ))}
-          </ul>
-        )}
+        {q.type === 'text' ? this.typed(q) : this.options(q)}
 
         {q.explanationHtml ? <div className={prose('BrainstormReview-explanation', this.attrs.inPost)}>{m.trust(q.explanationHtml)}</div> : null}
       </li>
+    );
+  }
+
+  /** What was typed, and the accepted answers once they may be shown. */
+  typed(q: ReviewQuestion): Mithril.Children {
+    return (
+      <div className="BrainstormReview-typed">
+        <span>{t('you_typed')}</span> <strong>{q.typed ?? t('no_answer')}</strong>
+        {q.accepted ? (
+          <div>
+            <span>{t('accepted')}</span> <strong>{q.accepted.join(' · ')}</strong>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  /** Each option as dealt: chosen or not, and right or wrong once the key may be shown. */
+  options(q: ReviewQuestion): Mithril.Children {
+    return (
+      <ul className="BrainstormReview-options">
+        {q.options.map((o) => (
+          <li
+            className={
+              'BrainstormReview-option' +
+              (o.chosen ? ' is-chosen' : '') +
+              (o.correct === true ? ' is-correct' : '') +
+              (o.correct === false && o.chosen ? ' is-wrong' : '')
+            }
+          >
+            <Icon name={o.correct ? 'fas fa-check' : o.chosen ? (o.correct === false ? 'fas fa-xmark' : 'fas fa-circle-dot') : 'far fa-circle'} />
+            <span>
+              {q.type === 'boolean' ? app.translator.trans(`ernestdefoe-brainstorm.forum.player.${o.id === 'true' ? 'true' : 'false'}`) : o.text}
+            </span>
+            {o.chosen ? <span className="BrainstormReview-yours">{t('your_answer')}</span> : null}
+          </li>
+        ))}
+      </ul>
     );
   }
 }

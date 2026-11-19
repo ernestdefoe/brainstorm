@@ -4,8 +4,8 @@ namespace ErnestDefoe\Brainstorm;
 
 use Carbon\Carbon;
 use Flarum\Database\AbstractModel;
+use Flarum\Database\ScopeVisibilityTrait;
 use Flarum\User\User;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -40,9 +40,27 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Quiz extends AbstractModel
 {
+    use ScopeVisibilityTrait;
+
     public const REVEALS = ['score', 'mistakes', 'answers', 'answers_always'];
 
     protected $table = 'quizzes';
+
+    /**
+     * The request's actor's standing at this quiz and its reward badge, filled
+     * for a whole page of quizzes at once by {@see Presenter::prime()}. Never stored.
+     *
+     * @var array{me: array<string, mixed>|null, badge: array<string, string>|null}|null
+     */
+    public ?array $viewer = null;
+
+    /**
+     * The settings and questions an API request sent, gathered by the quiz
+     * resource's fields for {@see Saver::save()} to check and write. Never stored.
+     *
+     * @var array<string, mixed>
+     */
+    public array $input = [];
 
     public $timestamps = true;
 
@@ -94,31 +112,5 @@ class Quiz extends AbstractModel
             && $this->question_count > 0
             && (! $this->opens_at || $this->opens_at->lte($now))
             && (! $this->closes_at || $this->closes_at->gt($now));
-    }
-
-    /**
-     * Published quizzes, plus the drafts this actor may edit.
-     *
-     * @param Builder<Quiz> $query
-     */
-    public function scopeVisibleTo(Builder $query, User $actor): void
-    {
-        if (! $actor->hasPermission('brainstorm.view')) {
-            $query->whereRaw('1 = 0');
-
-            return;
-        }
-
-        if ($actor->hasPermission('brainstorm.manage')) {
-            return;
-        }
-
-        $query->where(function (Builder $q) use ($actor) {
-            $q->where('status', 'published');
-
-            if (! $actor->isGuest() && $actor->hasPermission('brainstorm.create')) {
-                $q->orWhere('user_id', $actor->id);
-            }
-        });
     }
 }

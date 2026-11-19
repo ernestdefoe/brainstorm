@@ -4,6 +4,7 @@ namespace ErnestDefoe\Brainstorm;
 
 use Carbon\Carbon;
 use Flarum\Database\AbstractModel;
+use Flarum\Database\ScopeVisibilityTrait;
 use Flarum\User\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -29,10 +30,28 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Attempt extends AbstractModel
 {
+    use ScopeVisibilityTrait;
+
     /** Seconds after the deadline a submission is still taken, for the trip to the server. */
     public const GRACE = 10;
 
     protected $table = 'quiz_attempts';
+
+    /**
+     * What the API shows of this attempt to the request's actor — the paper,
+     * the marked result or a save receipt — built by {@see Presenter}. Never stored.
+     *
+     * @var array<string, mixed>|null
+     */
+    public ?array $view = null;
+
+    /**
+     * The answers (and whether to hand in) an API request sent, gathered by
+     * the attempt resource's fields. Never stored as such.
+     *
+     * @var array{answers?: mixed, submit?: bool}
+     */
+    public array $input = [];
 
     public $timestamps = false;
 

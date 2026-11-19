@@ -5,7 +5,7 @@ import Icon from 'flarum/common/components/Icon';
 import extractText from 'flarum/common/utils/extractText';
 import LoadingIndicator from 'flarum/common/components/LoadingIndicator';
 import type Mithril from 'mithril';
-import { saveAnswers, showAttempt, startAttempt, submitAttempt } from '../../common/api';
+import { saveAnswers, saveAnswersOnLeave, showAttempt, startAttempt, submitAttempt } from '../../common/api';
 import type { Answer, Paper, PaperQuestion, Quiz, Result } from '../../common/api';
 import { clock } from '../../common/format';
 import ResultView from './ResultView';
@@ -73,20 +73,11 @@ export default class Player extends Component<Attrs> {
     this.flush();
   }
 
-  /**
-   * The answers not yet saved, sent as the page goes away: a keepalive
-   * request outlives the tab being closed, which an ordinary one does not.
-   */
+  /** The answers not yet saved, sent as the page goes away (see saveAnswersOnLeave). */
   flush = () => {
     if (!this.dirty || !this.paper || this.phase === 'result' || this.phase === 'submitting') return;
     this.dirty = false;
-    fetch(app.forum.attribute<string>('apiUrl') + '/quiz-attempts/' + this.paper.id, {
-      method: 'POST',
-      keepalive: true,
-      credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json', 'X-HTTP-Method-Override': 'PATCH', 'X-CSRF-Token': app.session.csrfToken || '' },
-      body: JSON.stringify({ data: { answers: this.answers } }),
-    }).catch(() => {});
+    saveAnswersOnLeave(this.paper.id, this.answers);
   };
 
   begin() {
@@ -211,40 +202,7 @@ export default class Player extends Component<Attrs> {
   }
 
   view(): Mithril.Children {
-    if (this.phase === 'loading' || this.phase === 'submitting') {
-      return (
-        <div className="BrainstormPlayer BrainstormPlayer--loading">
-          <LoadingIndicator display="block" />
-        </div>
-      );
-    }
-
-    if (this.phase === 'error') {
-      return (
-        <div className="BrainstormPlayer BrainstormPlayer--error">
-          <p>{this.error || t('error')}</p>
-          {this.attrs.onclose ? (
-            <Button className="Button" onclick={() => this.attrs.onclose!()}>
-              {t('close')}
-            </Button>
-          ) : null}
-        </div>
-      );
-    }
-
-    if (this.phase === 'result') {
-      return (
-        <div className="BrainstormPlayer">
-          <ResultView
-            inPost={this.attrs.inPost}
-            result={this.result!}
-            quiz={this.attrs.quiz}
-            onretry={() => this.begin()}
-            onclose={this.attrs.onclose}
-          />
-        </div>
-      );
-    }
+    if (this.phase !== 'playing' && this.phase !== 'review') return this.status();
 
     const paper = this.paper!;
     const total = paper.questions.length;
@@ -277,6 +235,42 @@ export default class Player extends Component<Attrs> {
     );
   }
 
+  /** Loading, a failure, or the marked result: anything but the paper itself. */
+  status(): Mithril.Children {
+    if (this.phase === 'error') {
+      return (
+        <div className="BrainstormPlayer BrainstormPlayer--error">
+          <p>{this.error || t('error')}</p>
+          {this.attrs.onclose ? (
+            <Button className="Button" onclick={() => this.attrs.onclose!()}>
+              {t('close')}
+            </Button>
+          ) : null}
+        </div>
+      );
+    }
+
+    if (this.phase === 'result') {
+      return (
+        <div className="BrainstormPlayer">
+          <ResultView
+            inPost={this.attrs.inPost}
+            result={this.result!}
+            quiz={this.attrs.quiz}
+            onretry={() => this.begin()}
+            onclose={this.attrs.onclose}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="BrainstormPlayer BrainstormPlayer--loading">
+        <LoadingIndicator display="block" />
+      </div>
+    );
+  }
+
   timer(): Mithril.Children {
     const left = this.secondsLeft();
     if (left === null) return null;
@@ -294,47 +288,7 @@ export default class Player extends Component<Attrs> {
   question(q: PaperQuestion): Mithril.Children {
     const last = this.index === this.paper!.questions.length - 1;
     const name = `brainstorm-q${this.paper!.id}-${q.id}`;
-    const value = this.answers[q.id];
-
-    let input: Mithril.Children;
-    if (q.type === 'text') {
-      input = (
-        <input
-          className="FormControl BrainstormPlayer-text"
-          type="text"
-          maxlength={300}
-          autocomplete="off"
-          aria-labelledby={name}
-          placeholder={text('type_answer')}
-          value={typeof value === 'string' ? value : ''}
-          oninput={(e: InputEvent) => this.set(q, (e.target as HTMLInputElement).value)}
-          onkeydown={(e: KeyboardEvent) => {
-            // A block, not `&&`: a handler that returns false cancels the key in Mithril.
-            if (e.key === 'Enter') this.forward(last);
-          }}
-        />
-      );
-    } else {
-      const multiple = q.type === 'multiple';
-      const chosen: string[] = Array.isArray(value) ? value : value ? [value] : [];
-
-      input = (
-        <div className="BrainstormOptions" role="group" aria-labelledby={name}>
-          {multiple ? <p className="BrainstormOptions-hint">{t('choose_all')}</p> : null}
-          {q.options.map((o) => {
-            const on = chosen.includes(o.id);
-
-            return (
-              <label className={'BrainstormOption' + (on ? ' is-chosen' : '')} key={o.id}>
-                <input type={multiple ? 'checkbox' : 'radio'} name={name} value={o.id} checked={on} onchange={() => this.toggle(q, o.id, multiple)} />
-                <span className="BrainstormOption-mark" aria-hidden="true" />
-                <span className="BrainstormOption-text">{q.type === 'boolean' ? t(o.id === 'true' ? 'true' : 'false') : o.text}</span>
-              </label>
-            );
-          })}
-        </div>
-      );
-    }
+    const input = q.type === 'text' ? this.typed(q, name, last) : this.choices(q, name);
 
     return (
       <div className="BrainstormQuestion" key={q.id}>
@@ -346,20 +300,72 @@ export default class Player extends Component<Attrs> {
         ) : null}
         {q.points !== 1 ? <p className="BrainstormQuestion-points">{t('points', { count: q.points })}</p> : null}
         {input}
-        <div className="BrainstormPlayer-nav">
-          <Button className="Button" icon="fas fa-arrow-left" disabled={this.index === 0} onclick={() => this.go(this.index - 1)}>
-            {t('previous')}
+        {this.nav(last)}
+      </div>
+    );
+  }
+
+  /** A typed answer. Enter moves on. */
+  typed(q: PaperQuestion, name: string, last: boolean): Mithril.Children {
+    const value = this.answers[q.id];
+
+    return (
+      <input
+        className="FormControl BrainstormPlayer-text"
+        type="text"
+        maxlength={300}
+        autocomplete="off"
+        aria-labelledby={name}
+        placeholder={text('type_answer')}
+        value={typeof value === 'string' ? value : ''}
+        oninput={(e: InputEvent) => this.set(q, (e.target as HTMLInputElement).value)}
+        onkeydown={(e: KeyboardEvent) => {
+          // A block, not `&&`: a handler that returns false cancels the key in Mithril.
+          if (e.key === 'Enter') this.forward(last);
+        }}
+      />
+    );
+  }
+
+  /** One or several of the options; true/false labels are translated here. */
+  choices(q: PaperQuestion, name: string): Mithril.Children {
+    const value = this.answers[q.id];
+    const multiple = q.type === 'multiple';
+    const chosen: string[] = Array.isArray(value) ? value : value ? [value] : [];
+
+    return (
+      <div className="BrainstormOptions" role="group" aria-labelledby={name}>
+        {multiple ? <p className="BrainstormOptions-hint">{t('choose_all')}</p> : null}
+        {q.options.map((o) => {
+          const on = chosen.includes(o.id);
+
+          return (
+            <label className={'BrainstormOption' + (on ? ' is-chosen' : '')} key={o.id}>
+              <input type={multiple ? 'checkbox' : 'radio'} name={name} value={o.id} checked={on} onchange={() => this.toggle(q, o.id, multiple)} />
+              <span className="BrainstormOption-mark" aria-hidden="true" />
+              <span className="BrainstormOption-text">{q.type === 'boolean' ? t(o.id === 'true' ? 'true' : 'false') : o.text}</span>
+            </label>
+          );
+        })}
+      </div>
+    );
+  }
+
+  nav(last: boolean): Mithril.Children {
+    return (
+      <div className="BrainstormPlayer-nav">
+        <Button className="Button" icon="fas fa-arrow-left" disabled={this.index === 0} onclick={() => this.go(this.index - 1)}>
+          {t('previous')}
+        </Button>
+        {last ? (
+          <Button className="Button Button--primary" onclick={() => this.forward(true)}>
+            {t('finish')}
           </Button>
-          {last ? (
-            <Button className="Button Button--primary" onclick={() => this.forward(true)}>
-              {t('finish')}
-            </Button>
-          ) : (
-            <Button className="Button Button--primary" onclick={() => this.go(this.index + 1)}>
-              {t('next')}
-            </Button>
-          )}
-        </div>
+        ) : (
+          <Button className="Button Button--primary" onclick={() => this.go(this.index + 1)}>
+            {t('next')}
+          </Button>
+        )}
       </div>
     );
   }

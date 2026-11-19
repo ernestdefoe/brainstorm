@@ -3,6 +3,7 @@
 namespace ErnestDefoe\Brainstorm\Integration\Badges;
 
 use ErnestDefoe\Brainstorm\Event\AttemptFinished;
+use ErnestDefoe\Brainstorm\Integration\Rewards\BadgeSource;
 use Flarum\Foundation\AbstractServiceProvider;
 use FoF\Badges\BadgeAwarder;
 use FoF\Badges\Trigger\MetricManager;
@@ -10,7 +11,8 @@ use FoF\Badges\Trigger\TriggerEvaluator;
 use Illuminate\Contracts\Events\Dispatcher;
 
 /**
- * Brainstorm's two triggers in FoF Badges, and the listener that evaluates them.
+ * Brainstorm's two triggers in FoF Badges, the listener that evaluates them,
+ * and FoF Badges as the source of quiz reward badges.
  *
  * 🚨 FoF Badges' own listener only recognises the events it knows, so
  * Brainstorm asks the evaluator itself — the same two calls that listener makes.
@@ -21,6 +23,8 @@ class BadgesProvider extends AbstractServiceProvider
 {
     public function register(): void
     {
+        $this->container->bind(BadgeSource::class, FofBadges::class);
+
         $this->container->extend(MetricManager::class, function (MetricManager $manager) {
             $manager->register($this->container->make(QuizzesPassedMetric::class));
             $manager->register($this->container->make(PerfectScoresMetric::class));

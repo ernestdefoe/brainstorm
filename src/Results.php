@@ -1,55 +1,29 @@
 <?php
 
-namespace ErnestDefoe\Brainstorm\Api;
+namespace ErnestDefoe\Brainstorm;
 
-use ErnestDefoe\Brainstorm\Attempt;
-use ErnestDefoe\Brainstorm\Attempts;
-use ErnestDefoe\Brainstorm\Presenter;
-use ErnestDefoe\Brainstorm\Question;
-use ErnestDefoe\Brainstorm\Quiz;
-use ErnestDefoe\Brainstorm\RichText;
-use ErnestDefoe\Brainstorm\Scorer;
-use Flarum\Http\RequestUtil;
 use Flarum\User\User;
 use Illuminate\Support\Str;
-use Laminas\Diactoros\Response\EmptyResponse;
-use Laminas\Diactoros\Response\JsonResponse;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * GET    /api/quizzes/{id}/results         — finished attempts and how each question fared
- * DELETE /api/quizzes/{id}/results/{user}  — reset one member's attempts
- *
- * For people who may edit the quiz. Attempts are shown whatever the members'
+ * A quiz's results, for the people who may edit it: finished attempts, and
+ * how each question fared. Attempts are shown whatever the members'
  * leaderboard choice: this is the quiz's own marking, not a ranking.
  */
-class ResultsController implements RequestHandlerInterface
+class Results
 {
-    use Concerns;
-
     public const PAGE = 50;
 
     /** Question statistics are taken from at most this many recent attempts. */
     public const SAMPLE = 1000;
 
-    public function __construct(private Presenter $presenter, private Attempts $attempts, private RichText $rich)
+    public function __construct(private Presenter $presenter, private RichText $rich)
     {
     }
 
-    public function handle(ServerRequestInterface $request): ResponseInterface
+    /** @return array{rows: list<array<string, mixed>>, next: int|null, questions: list<array<string, mixed>>|null} */
+    public function page(Quiz $quiz, int $offset): array
     {
-        $actor = RequestUtil::getActor($request);
-        $quiz = $this->editableQuiz($request, $actor);
-
-        if ($request->getMethod() === 'DELETE') {
-            $this->attempts->reset($quiz, $this->routeId($request, 'user'));
-
-            return new EmptyResponse(204);
-        }
-
-        $offset = max(0, (int) ($request->getQueryParams()['offset'] ?? 0));
         $page = Attempt::query()->where('quiz_id', $quiz->id)->whereNotNull('submitted_at')
             ->orderByDesc('submitted_at')->orderByDesc('id')
             ->skip($offset)->take(self::PAGE + 1)
@@ -57,7 +31,7 @@ class ResultsController implements RequestHandlerInterface
 
         $users = User::query()->whereIn('id', $page->pluck('user_id')->unique()->all())->get()->keyBy('id');
 
-        $attempts = $page->take(self::PAGE)->map(fn (Attempt $a) => [
+        $rows = $page->take(self::PAGE)->map(fn (Attempt $a) => [
             'id' => $a->id,
             'user' => ($u = $users->get($a->user_id)) ? $this->presenter->user($u) : null,
             'submittedAt' => $a->submitted_at?->toIso8601String(),
@@ -70,13 +44,11 @@ class ResultsController implements RequestHandlerInterface
             'practice' => $a->practice,
         ])->values()->all();
 
-        return new JsonResponse([
-            'data' => $attempts,
-            'meta' => [
-                'next' => $page->count() > self::PAGE ? $offset + self::PAGE : null,
-                'questions' => $offset ? null : $this->questionStats($quiz),
-            ],
-        ]);
+        return [
+            'rows' => $rows,
+            'next' => $page->count() > self::PAGE ? $offset + self::PAGE : null,
+            'questions' => $offset ? null : $this->questionStats($quiz),
+        ];
     }
 
     /**
@@ -87,15 +59,14 @@ class ResultsController implements RequestHandlerInterface
      */
     private function questionStats(Quiz $quiz): array
     {
-        $quizId = $quiz->id;
         $partial = $quiz->partial_credit;
-        $questions = Question::query()->where('quiz_id', $quizId)->orderBy('position')->get()->keyBy('id');
+        $questions = Question::query()->where('quiz_id', $quiz->id)->orderBy('position')->get()->keyBy('id');
         $this->rich->prime([$quiz], $questions->pluck('body'));
         $asked = $earned = [];
 
         // Raw rows, one at a time: up to SAMPLE attempts of up to 200
         // questions each would otherwise be hydrated as models all at once.
-        Attempt::query()->where('quiz_id', $quizId)->whereNotNull('submitted_at')->where('practice', false)
+        Attempt::query()->where('quiz_id', $quiz->id)->whereNotNull('submitted_at')->where('practice', false)
             ->orderByDesc('id')->limit(self::SAMPLE)->select(['layout', 'answers'])
             ->toBase()->cursor()
             ->each(function (object $row) use ($questions, $partial, &$asked, &$earned) {

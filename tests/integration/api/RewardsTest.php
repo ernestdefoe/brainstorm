@@ -10,6 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 class RewardsTest extends TestCase
 {
     use RetrievesAuthorizedUsers;
+    use SpeaksJsonApi;
 
     protected function setUp(): void
     {
@@ -30,9 +31,10 @@ class RewardsTest extends TestCase
 
     private function send_(string $method, string $path, int $actor, ?array $body = null): array
     {
+        [$method, $path, $body] = self::toJsonApi($method, $path, $body);
         $response = $this->send($this->request($method, $path, ['authenticatedAs' => $actor] + ($body ? ['json' => $body] : [])));
 
-        return [$response->getStatusCode(), json_decode((string) $response->getBody(), true)];
+        return [$response->getStatusCode(), self::flatten(json_decode((string) $response->getBody(), true))];
     }
 
     #[Test]

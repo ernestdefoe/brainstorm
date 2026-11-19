@@ -34,6 +34,17 @@
         "php": "^8.3",
         "flarum/core": "^2.0"
     },
+    "suggest": {
+        "fof/badges": "Award a badge for passing a quiz, and badge triggers for quizzes passed and perfect scores.",
+        "fof/gamification": "Award points for passing a quiz.",
+        "fof/upload": "Pick question images from the media library.",
+        "fof/forum-widgets-core": "Place the quizzes widget in FoF Forum Widgets' layout.",
+        "flarum/mentions": "Mentions in quiz descriptions and questions are rendered in one query per kind.",
+        "flarum/tags": "Tag mentions in quiz descriptions and questions.",
+        "ernestdefoe/onramp": "A \"pass quizzes\" step for Onramp journeys.",
+        "ernestdefoe/page-builder": "The quizzes widget as a Page Builder block.",
+        "ernestdefoe/bespoke": "The quizzes widget in Bespoke's widget zones."
+    },
     "autoload": {
         "psr-4": {
             "ErnestDefoe\\Brainstorm\\": "src/"
@@ -54,9 +65,15 @@
                 "color": "#fff"
             },
             "optional-dependencies": [
+                "flarum/mentions",
+                "flarum/tags",
                 "fof/badges",
                 "fof/gamification",
-                "ernestdefoe/onramp"
+                "fof/upload",
+                "fof/forum-widgets-core",
+                "ernestdefoe/onramp",
+                "ernestdefoe/page-builder",
+                "ernestdefoe/bespoke"
             ]
         }
     },
