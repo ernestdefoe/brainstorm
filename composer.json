@@ -34,6 +34,9 @@
         "php": "^8.3",
         "flarum/core": "^2.0"
     },
+    "conflict": {
+        "ernestdefoe/buzz": "<1.1.6"
+    },
     "suggest": {
         "fof/badges": "Award a badge for passing a quiz, and badge triggers for quizzes passed and perfect scores.",
         "fof/gamification": "Award points for passing a quiz.",
