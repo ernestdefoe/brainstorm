@@ -9,7 +9,12 @@ const t = (key: string) => app.translator.trans(`ernestdefoe-brainstorm.admin.${
 
 export default [
   new Extend.Admin()
-    .setting(() => ({ setting: 'ernestdefoe-brainstorm.show_nav', type: 'boolean', label: t('settings.show_nav') }))
+    .setting(() => ({
+      setting: 'ernestdefoe-brainstorm.show_nav',
+      type: 'boolean',
+      label: t('settings.show_nav'),
+      help: t('settings.show_nav_help'),
+    }))
     .setting(() => ({
       setting: 'ernestdefoe-brainstorm.editors_count',
       type: 'boolean',

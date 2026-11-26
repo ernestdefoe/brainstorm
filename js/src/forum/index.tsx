@@ -18,7 +18,10 @@ export { default as extend } from './extend';
  */
 app.initializers.add('ernestdefoe-brainstorm', () => {
   extend(IndexSidebar.prototype, 'navItems', function (items) {
-    if (!app.forum.attribute('canViewQuizzes') || app.forum.attribute('brainstormShowNav') === false) return;
+    if (!app.forum.attribute('canViewQuizzes')) return;
+    // The admin setting hides the link from visitors and members; whoever may
+    // write or manage quizzes keeps it, as their way into the list and editor.
+    if (app.forum.attribute('brainstormShowNav') === false && !app.forum.attribute('canCreateQuizzes')) return;
 
     items.add(
       'quizzes',
