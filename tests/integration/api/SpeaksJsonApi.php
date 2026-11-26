@@ -25,7 +25,7 @@ trait SpeaksJsonApi
         if ($method === 'POST' && preg_match('#^/api/quiz-attempts/(\d+)/submit$#', $path, $m)) {
             return ['PATCH', "/api/quiz-attempts/$m[1]", ['data' => ['type' => 'quiz-attempts', 'id' => $m[1], 'attributes' => ($data ?? []) + ['submit' => true]]]];
         }
-        if (preg_match('#^/api/(quizzes|quiz-attempts)(?:/(\d+))?$#', $path, $m) && in_array($method, ['POST', 'PATCH'], true) && $data !== null) {
+        if (preg_match('#^/api/(quizzes|quiz-attempts|quiz-assessments)(?:/(\d+))?$#', $path, $m) && in_array($method, ['POST', 'PATCH'], true) && $data !== null) {
             return [$method, $path, ['data' => ['type' => $m[1], 'attributes' => $data] + (isset($m[2]) ? ['id' => $m[2]] : [])]];
         }
 

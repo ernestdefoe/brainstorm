@@ -17,6 +17,10 @@ ernestdefoe-brainstorm:
     no_questions: This quiz has no questions yet.
     slow_down: Too many requests in a short time. Wait a few minutes and try again.
     busy: Still starting your attempt. Try again in a moment.
+    assessment_title: Give the assessment a title of up to 200 characters.
+    assessment_empty: Add at least one quiz before publishing.
+    assessment_too_many: An assessment can hold up to {max} quizzes.
+    assessment_quiz: One of the quizzes can't be found, or you can't see it.
 
   # Shared by the forum and the admin.
   lib:

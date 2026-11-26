@@ -12,6 +12,8 @@
 use ErnestDefoe\Brainstorm\Access;
 use ErnestDefoe\Brainstorm\Api;
 use ErnestDefoe\Brainstorm\Console;
+use ErnestDefoe\Brainstorm\Assessment\Assessment;
+use ErnestDefoe\Brainstorm\Assessment\RecordCompletions;
 use ErnestDefoe\Brainstorm\Attempt;
 use ErnestDefoe\Brainstorm\Content\QuizDocument;
 use ErnestDefoe\Brainstorm\Event\AttemptFinished;
@@ -45,6 +47,9 @@ return [
         ->route('/quizzes', 'brainstorm.index')
         ->route('/quizzes/new', 'brainstorm.new')
         ->route('/quizzes/leaderboard', 'brainstorm.leaderboard')
+        ->route('/quizzes/assessments/new', 'brainstorm.assessment.new')
+        ->route('/quizzes/assessments/{id:\d+(?:-[^/]*)?}', 'brainstorm.assessment')
+        ->route('/quizzes/assessments/{id:\d+}/edit', 'brainstorm.assessment.edit')
         ->route('/quizzes/{id:\d+(?:-[^/]*)?}', 'brainstorm.quiz', QuizDocument::class)
         ->route('/quizzes/{id:\d+}/edit', 'brainstorm.edit'),
 
@@ -55,6 +60,7 @@ return [
 
     new Extend\ApiResource(Api\Resource\QuizResource::class),
     new Extend\ApiResource(Api\Resource\AttemptResource::class),
+    new Extend\ApiResource(Api\Resource\AssessmentResource::class),
 
     (new Extend\SearchDriver(DatabaseSearchDriver::class))
         ->addSearcher(Quiz::class, Search\QuizSearcher::class)
@@ -67,13 +73,17 @@ return [
         ->scope(Access\ScopeQuizVisibility::class),
     (new Extend\ModelVisibility(Attempt::class))
         ->scope(Access\ScopeAttemptVisibility::class),
+    (new Extend\ModelVisibility(Assessment::class))
+        ->scope(Access\ScopeAssessmentVisibility::class),
 
     (new Extend\Policy())
         ->modelPolicy(Quiz::class, Access\QuizPolicy::class)
-        ->modelPolicy(Attempt::class, Access\AttemptPolicy::class),
+        ->modelPolicy(Attempt::class, Access\AttemptPolicy::class)
+        ->modelPolicy(Assessment::class, Access\AssessmentPolicy::class),
 
     (new Extend\Event())
-        ->listen(AttemptFinished::class, PayRewards::class),
+        ->listen(AttemptFinished::class, PayRewards::class)
+        ->listen(AttemptFinished::class, RecordCompletions::class),
 
     // Abandoned timed attempts are marked in the background, not by whoever views a leaderboard.
     (new Extend\Console())

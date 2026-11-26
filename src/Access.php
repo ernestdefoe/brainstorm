@@ -27,6 +27,17 @@ class Access
             || ($quiz->user_id === $actor->id && $actor->hasPermission('brainstorm.create'));
     }
 
+    /** The same rule as {@see canEdit()}, for an assessment. */
+    public static function canEditAssessment(User $actor, Assessment\Assessment $assessment): bool
+    {
+        if ($actor->isGuest()) {
+            return false;
+        }
+
+        return $actor->hasPermission('brainstorm.manage')
+            || ($assessment->user_id === $actor->id && $actor->hasPermission('brainstorm.create'));
+    }
+
     /**
      * Attaching points or a badge. Kept from authors on purpose: an author who
      * could attach rewards could write a quiz only they can pass and pay
