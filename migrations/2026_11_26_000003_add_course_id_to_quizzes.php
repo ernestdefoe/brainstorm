@@ -6,7 +6,7 @@ use Illuminate\Database\Schema\Builder;
 /**
  * A quiz only members enrolled in this Syllabus course may see and take.
  * No foreign key: Syllabus is optional, and a quiz whose course is gone stays
- * hidden from everyone but its editors.
+ * hidden from everyone but its editors and course managers.
  */
 return [
     'up' => function (Builder $schema) {

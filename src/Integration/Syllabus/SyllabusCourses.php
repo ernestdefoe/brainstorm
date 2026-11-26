@@ -10,12 +10,15 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Course-only quizzes through Syllabus's public contract (1.5.0): a member
- * enrolled in the course sees its quizzes, and so do its instructors and
- * Syllabus's course managers. Bound by {@see SyllabusProvider}.
+ * enrolled in the course sees its quizzes, and so do the instructors of a
+ * published course and Syllabus's course managers. Bound by {@see SyllabusProvider}.
  */
 class SyllabusCourses implements CourseGate
 {
-    /** Courses an instructor's own quizzes are checked against; Syllabus's own cap. */
+    /**
+     * How many of an instructor's courses count, for what they see and what
+     * they may pick alike: Syllabus's own cap (its published courses, by title).
+     */
     public const TAUGHT = Courses::ATTACHABLE_LIMIT;
 
     public function __construct(private Enrolments $enrolments, private Courses $courses)
@@ -43,6 +46,6 @@ class SyllabusCourses implements CourseGate
 
     public function attachable(User $actor): array
     {
-        return $this->courses->attachableBy($actor);
+        return $this->courses->attachableBy($actor, self::TAUGHT);
     }
 }

@@ -83,7 +83,9 @@ class Progress
         $percents = $bests->map(fn (Best $b) => $b->percent)->all();
 
         foreach ($assessments as $assessment) {
-            $mine = $items->get($assessment->id, collect());
+            $mine = $items->get($assessment->id, new \Illuminate\Database\Eloquent\Collection());
+            // The editor's copy reads the same list: no second query for it.
+            $assessment->setRelation('items', $mine);
 
             $assessment->viewer = [
                 'me' => $actor->isGuest() ? null : self::standing($assessment, $mine, $percents),

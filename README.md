@@ -16,6 +16,8 @@ Quizzes and knowledge tests for your community. Write a quiz once, play it on it
 - **Leaderboards** for each quiz and across all quizzes. Members can keep themselves off every leaderboard from their settings.
 - **Quizzes inside posts.** Put a quiz's link on a line of its own, or use the composer's **Quiz** button, and the post shows the quiz itself, ready to play. This works with Markdown, BBCode, Scribe and FoF Rich Text.
 - **Rewards:** a [FoF Badges](https://github.com/FriendsOfFlarum/badges) badge and [FoF Gamification](https://github.com/FriendsOfFlarum/gamification) points for passing a quiz the first time. FoF Badges also gets two triggers: *quizzes passed* and *quizzes finished with 100%*.
+- **Assessments:** group existing quizzes (one per chapter, say) under one overall result. Each quiz stays its own quiz; the overall result is the equal or weighted average of a member's best score at each, with its own passing score and a combined progress ring. An assessment is complete once every required quiz is finished and the average reaches the passing score.
+- **Course-only quizzes** with [Syllabus](https://github.com/ernestdefoe/syllabus): limit a quiz to members enrolled in one of your courses. Its instructors and course managers see it too; nobody else does, on any list, leaderboard or embed.
 - **Onramp:** a "pass N quizzes" step for the [Onramp](https://github.com/ernestdefoe/onramp) onboarding checklist.
 - **Results for authors:** every finished attempt, how often each question is answered correctly, and a reset for any member's attempts.
 - **Practice runs:** authors and moderators can try any quiz, drafts included. Those runs never appear on leaderboards and never earn rewards.
@@ -77,6 +79,17 @@ Rewards have their own permission so that a quiz's author can't pay themselves f
 ## Points
 
 FoF Gamification recounts a member's points from their votes, so points granted by another extension need its point-grants feature. Until your FoF Gamification version has it, the points field stays hidden; badges work either way.
+
+## For extension developers
+
+Listen with `Extend\Event` inside `Extend\Conditional()->whenExtensionEnabled('ernestdefoe-brainstorm', …)`:
+
+| Event | Properties | When |
+| --- | --- | --- |
+| `ErnestDefoe\Brainstorm\Event\AttemptFinished` | `Attempt $attempt`, `User $user`, `bool $firstPass` | A counted attempt was marked (practice runs never fire it). `$firstPass` is true the one time a member first passes that quiz. |
+| `ErnestDefoe\Brainstorm\Event\AssessmentCompleted` | `Assessment $assessment`, `User $user`, `float $percent` | A member completed an assessment: every required quiz finished and the average reached its passing score. Once per member and assessment, ever. |
+
+`ErnestDefoe\Brainstorm\OptOut::userIds()` is a subquery of the members who keep themselves off quiz leaderboards, for `whereNotIn('users.id', …)`.
 
 ## Links
 

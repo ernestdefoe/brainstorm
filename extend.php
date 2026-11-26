@@ -19,6 +19,7 @@ use ErnestDefoe\Brainstorm\Content\QuizDocument;
 use ErnestDefoe\Brainstorm\Event\AttemptFinished;
 use ErnestDefoe\Brainstorm\Integration\Badges\BadgesProvider;
 use ErnestDefoe\Brainstorm\Integration\Badges\EvaluateBadges;
+use ErnestDefoe\Brainstorm\Integration\Courses\CoursesProvider;
 use ErnestDefoe\Brainstorm\Integration\Gamification\GamificationProvider;
 use ErnestDefoe\Brainstorm\Integration\Onramp\PassQuizzesStep;
 use ErnestDefoe\Brainstorm\Integration\Rewards\RewardsProvider;
@@ -109,9 +110,10 @@ return [
         ->hasOne('quizOptOut', OptOut::class, 'user_id')
         ->cast('quiz_private', LeaderboardChoice::class),
 
-    // No rewards unless FoF Badges or FoF Gamification bind theirs below.
+    // No rewards and no courses unless FoF Badges, FoF Gamification or Syllabus bind theirs below.
     (new Extend\ServiceProvider())
-        ->register(RewardsProvider::class),
+        ->register(RewardsProvider::class)
+        ->register(CoursesProvider::class),
 
     (new Extend\Conditional())
         ->whenExtensionEnabled('fof-badges', fn () => [

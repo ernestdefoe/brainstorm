@@ -19,23 +19,24 @@ class Access
     /** The author while they may still write quizzes, or a manager. */
     public static function canEdit(User $actor, Quiz $quiz): bool
     {
-        if ($actor->isGuest()) {
-            return false;
-        }
-
-        return $actor->hasPermission('brainstorm.manage')
-            || ($quiz->user_id === $actor->id && $actor->hasPermission('brainstorm.create'));
+        return self::ownsOrManages($actor, $quiz->user_id);
     }
 
     /** The same rule as {@see canEdit()}, for an assessment. */
     public static function canEditAssessment(User $actor, Assessment\Assessment $assessment): bool
+    {
+        return self::ownsOrManages($actor, $assessment->user_id);
+    }
+
+    /** A manager, or the author while they may still write quizzes. */
+    private static function ownsOrManages(User $actor, ?int $authorId): bool
     {
         if ($actor->isGuest()) {
             return false;
         }
 
         return $actor->hasPermission('brainstorm.manage')
-            || ($assessment->user_id === $actor->id && $actor->hasPermission('brainstorm.create'));
+            || ($authorId === $actor->id && $actor->hasPermission('brainstorm.create'));
     }
 
     /**
