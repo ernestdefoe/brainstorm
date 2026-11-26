@@ -59,8 +59,7 @@ class Leaderboards
 
     /**
      * Ranked by quizzes passed, then by the scores behind them. Only quizzes
-     * that are published and keep a leaderboard count: every published quiz
-     * is visible to someone who may view quizzes at all.
+     * that are published, keep a leaderboard and the viewer may see count.
      *
      * @return array{rows: list<array<string, mixed>>, me: array<string, mixed>|null}
      */
@@ -104,6 +103,8 @@ class Leaderboards
             ->join('quizzes', 'quizzes.id', '=', 'quiz_bests.quiz_id')
             ->where('quizzes.status', 'published')
             ->where('quizzes.leaderboard', true)
+            // Course-only quizzes count only for those who may see them.
+            ->whereIn('quiz_bests.quiz_id', Quiz::query()->whereVisibleTo($actor)->select('quizzes.id'))
             ->where('quiz_bests.passed', true)
             ->groupBy('quiz_bests.user_id')
             ->select('quiz_bests.user_id')

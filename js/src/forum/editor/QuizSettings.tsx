@@ -11,6 +11,8 @@ export interface EditorMeta {
   points: boolean;
   badges: boolean;
   badgeList: Badge[];
+  /** The Syllabus courses this author may limit a quiz to; null while Syllabus isn't enabled. */
+  courses: { id: number; title: string }[] | null;
 }
 
 export interface QuizSettingsAttrs {
@@ -46,6 +48,7 @@ export default class QuizSettings extends Component<QuizSettingsAttrs> {
           <p className="helpText">{t('reveal_help.' + quiz.reveal)}</p>
         </div>
         {this.dates()}
+        {this.course()}
         {this.rewards()}
         {this.actions()}
       </div>
@@ -131,6 +134,29 @@ export default class QuizSettings extends Component<QuizSettingsAttrs> {
           value={toLocalInput(quiz.closesAt)}
           oninput={(e: InputEvent) => (quiz.closesAt = value(e))}
         />
+      </div>
+    );
+  }
+
+  /** Only members enrolled in a Syllabus course may see and take the quiz. */
+  course(): Mithril.Children {
+    const { quiz, meta } = this.attrs;
+    if (!meta.courses) return null;
+
+    // Keyed as strings ("c12"): numeric keys would be re-sorted ahead of "Everyone".
+    const options: Record<string, string> = { '': text('course_everyone') };
+    meta.courses.forEach((c) => (options['c' + c.id] = c.title));
+    if (quiz.courseId && !options['c' + quiz.courseId]) options['c' + quiz.courseId] = text('course_other');
+
+    return (
+      <div className="Form-group">
+        <label>{t('course')}</label>
+        <Select
+          value={quiz.courseId ? 'c' + quiz.courseId : ''}
+          options={options}
+          onchange={(v: string) => (quiz.courseId = v ? Number(v.slice(1)) : null)}
+        />
+        <p className="helpText">{t('course_help')}</p>
       </div>
     );
   }

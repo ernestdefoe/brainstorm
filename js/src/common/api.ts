@@ -55,6 +55,7 @@ export interface Editable {
   closesAt: string | null;
   rewardPoints: number;
   rewardBadgeId: number | null;
+  courseId: number | null;
   questions: EditableQuestion[];
 }
 
@@ -73,6 +74,7 @@ export interface Quiz {
   opensAt: string | null;
   closesAt: string | null;
   isOpen: boolean;
+  courseOnly: boolean;
   rewardPoints: number;
   rewardBadge: Badge | null;
   attemptCount: number;
@@ -214,11 +216,13 @@ export function listQuizzes(params: { filter?: Record<string, string>; sort?: st
   const page = { offset, total: 0, ...(limit ? { limit } : {}) };
   const sort = params.sort ? SORTS[params.sort] : undefined;
 
-  return request('GET', '/quizzes', undefined, { ...(params.filter ? { filter: params.filter } : {}), page, ...(sort ? { sort } : {}) }).then((doc) => {
-    const data = (doc.data as ResourceObject[]).map((r) => flatten<Quiz>(r, doc.included));
+  return request('GET', '/quizzes', undefined, { ...(params.filter ? { filter: params.filter } : {}), page, ...(sort ? { sort } : {}) }).then(
+    (doc) => {
+      const data = (doc.data as ResourceObject[]).map((r) => flatten<Quiz>(r, doc.included));
 
-    return { data, meta: { canCreate: !!app.forum.attribute('canCreateQuizzes'), next: doc.links?.next ? offset + data.length : null } };
-  });
+      return { data, meta: { canCreate: !!app.forum.attribute('canCreateQuizzes'), next: doc.links?.next ? offset + data.length : null } };
+    }
+  );
 }
 
 export const showQuiz = (id: number, edit = false) =>
@@ -234,7 +238,7 @@ export const deleteQuiz = (id: number) => request('DELETE', `/quizzes/${id}`).th
 
 export const editorMeta = () =>
   request('GET', '/quizzes/editor').then((doc) => ({
-    data: doc.meta as { canReward: boolean; points: boolean; badges: boolean; badgeList: Badge[] },
+    data: doc.meta as { canReward: boolean; points: boolean; badges: boolean; badgeList: Badge[]; courses: { id: number; title: string }[] | null },
   }));
 
 export const startAttempt = (quizId: number) =>

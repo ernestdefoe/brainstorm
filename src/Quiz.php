@@ -30,6 +30,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property Carbon|null $closes_at
  * @property int $reward_points
  * @property int|null $reward_badge_id
+ * @property int|null $course_id
  * @property int $question_count
  * @property int $attempt_count
  * @property int $pass_count
@@ -77,6 +78,7 @@ class Quiz extends AbstractModel
         'leaderboard' => 'boolean',
         'reward_points' => 'integer',
         'reward_badge_id' => 'integer',
+        'course_id' => 'integer',
         'question_count' => 'integer',
         'attempt_count' => 'integer',
         'pass_count' => 'integer',

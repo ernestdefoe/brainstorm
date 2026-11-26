@@ -22,6 +22,7 @@ use ErnestDefoe\Brainstorm\Integration\Badges\EvaluateBadges;
 use ErnestDefoe\Brainstorm\Integration\Gamification\GamificationProvider;
 use ErnestDefoe\Brainstorm\Integration\Onramp\PassQuizzesStep;
 use ErnestDefoe\Brainstorm\Integration\Rewards\RewardsProvider;
+use ErnestDefoe\Brainstorm\Integration\Syllabus\SyllabusProvider;
 use ErnestDefoe\Brainstorm\Integration\Tags\TagMentionsProvider;
 use ErnestDefoe\Brainstorm\LeaderboardChoice;
 use ErnestDefoe\Brainstorm\Listener\PayRewards;
@@ -119,6 +120,12 @@ return [
         ])
         ->whenExtensionEnabled('fof-gamification', fn () => [
             (new Extend\ServiceProvider())->register(GamificationProvider::class),
+        ])
+        // Course-only quizzes. Not in composer's optional-dependencies: Syllabus
+        // lists Brainstorm there, and a pair listing each other is a cycle
+        // that stops migrate and enable ("Circular dependencies detected").
+        ->whenExtensionEnabled('ernestdefoe-syllabus', fn () => [
+            (new Extend\ServiceProvider())->register(SyllabusProvider::class),
         ])
         ->whenExtensionEnabled('flarum-tags', fn () => [
             (new Extend\ServiceProvider())->register(TagMentionsProvider::class),

@@ -5,6 +5,7 @@ namespace ErnestDefoe\Brainstorm\Api\Resource;
 use Carbon\Carbon;
 use ErnestDefoe\Brainstorm\Access;
 use ErnestDefoe\Brainstorm\Attempts;
+use ErnestDefoe\Brainstorm\Integration\Courses\CourseGate;
 use ErnestDefoe\Brainstorm\Leaderboards;
 use ErnestDefoe\Brainstorm\Presenter;
 use ErnestDefoe\Brainstorm\Quiz;
@@ -40,7 +41,7 @@ class QuizResource extends AbstractDatabaseResource
     public const HOURLY = 20;
 
     /** Settings the editor sends, written by {@see Saver} beside the read ones below. */
-    private const INPUTS = ['description', 'questionPick', 'shuffleQuestions', 'shuffleOptions', 'partialCredit', 'rewardBadgeId', 'questions'];
+    private const INPUTS = ['description', 'questionPick', 'shuffleQuestions', 'shuffleOptions', 'partialCredit', 'rewardBadgeId', 'courseId', 'questions'];
 
     public function __construct(
         private Saver $saver,
@@ -49,7 +50,8 @@ class QuizResource extends AbstractDatabaseResource
         private Leaderboards $leaderboards,
         private Results $results,
         private Rewards $rewards,
-        private TranslatorInterface $translator
+        private TranslatorInterface $translator,
+        private CourseGate $courses
     ) {
     }
 
@@ -154,6 +156,7 @@ class QuizResource extends AbstractDatabaseResource
             Schema\Integer::make('passCount'),
             Schema\DateTime::make('publishedAt'),
             Schema\Boolean::make('isOpen')->get(fn (Quiz $quiz) => $quiz->isOpen()),
+            Schema\Boolean::make('courseOnly')->get(fn (Quiz $quiz) => $quiz->course_id !== null),
             Schema\Str::make('descriptionHtml')->get(fn (Quiz $quiz) => $this->presenter->descriptionHtml($quiz)),
             Schema\Relationship\ToOne::make('user')->includable(),
         ];
@@ -268,7 +271,9 @@ class QuizResource extends AbstractDatabaseResource
             throw new PermissionDeniedException();
         }
 
-        return $this->rewards->editorOptions($context->getActor());
+        // The courses a quiz may be limited to; null while Syllabus isn't enabled.
+        return $this->rewards->editorOptions($context->getActor())
+            + ['courses' => $this->courses->available() ? $this->courses->attachable($context->getActor()) : null];
     }
 
     private function limit(Context $context): int

@@ -9,6 +9,12 @@ const t = (key: string, params: Record<string, unknown> = {}) => app.translator.
 export default function quizFacts(quiz: Quiz): any {
   const me = quiz.me;
   const facts = [
+    quiz.courseOnly ? (
+      <span>
+        <Icon name="fas fa-user-graduate" />
+        {t('course_only')}
+      </span>
+    ) : null,
     <span>
       <Icon name="far fa-circle-question" />
       {t('questions', { count: quiz.questionCount })}

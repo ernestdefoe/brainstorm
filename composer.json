@@ -35,7 +35,8 @@
         "flarum/core": "^2.0"
     },
     "conflict": {
-        "ernestdefoe/buzz": "<1.1.6"
+        "ernestdefoe/buzz": "<1.1.6",
+        "ernestdefoe/syllabus": "<1.5.0"
     },
     "suggest": {
         "fof/badges": "Award a badge for passing a quiz, and badge triggers for quizzes passed and perfect scores.",
@@ -46,7 +47,8 @@
         "flarum/tags": "Tag mentions in quiz descriptions and questions.",
         "ernestdefoe/onramp": "A \"pass quizzes\" step for Onramp journeys.",
         "ernestdefoe/page-builder": "The quizzes widget as a Page Builder block.",
-        "ernestdefoe/bespoke": "The quizzes widget in Bespoke's widget zones."
+        "ernestdefoe/bespoke": "The quizzes widget in Bespoke's widget zones.",
+        "ernestdefoe/syllabus": "Course-only quizzes: a quiz only members enrolled in a Syllabus course can see and take, and quizzes as Syllabus lessons."
     },
     "autoload": {
         "psr-4": {
@@ -81,6 +83,7 @@
         }
     },
     "require-dev": {
+        "ernestdefoe/syllabus": "^1.5",
         "flarum/mentions": "^2.0",
         "flarum/phpstan": "^2.0",
         "flarum/tags": "^2.0",

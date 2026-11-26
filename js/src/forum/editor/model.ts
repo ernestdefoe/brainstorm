@@ -50,6 +50,7 @@ export function blankQuiz(): Editable {
     closesAt: null,
     rewardPoints: 0,
     rewardBadgeId: null,
+    courseId: null,
     questions: [blankQuestion()],
   };
 }

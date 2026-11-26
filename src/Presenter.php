@@ -115,6 +115,7 @@ class Presenter
             'closesAt' => $quiz->closes_at?->toIso8601String(),
             'rewardPoints' => $quiz->reward_points,
             'rewardBadgeId' => $quiz->reward_badge_id,
+            'courseId' => $quiz->course_id,
             'questions' => $quiz->questions->map(fn (Question $q) => [
                 'id' => $q->id,
                 'type' => $q->type,

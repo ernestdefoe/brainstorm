@@ -3,6 +3,7 @@
 namespace ErnestDefoe\Brainstorm;
 
 use Carbon\Carbon;
+use ErnestDefoe\Brainstorm\Integration\Courses\CourseGate;
 use Flarum\Foundation\ValidationException;
 use Flarum\Locale\TranslatorInterface;
 use Flarum\User\User;
@@ -27,7 +28,8 @@ class Saver
         private ConnectionInterface $db,
         private RichText $rich,
         private TranslatorInterface $translator,
-        private Rewards $rewards
+        private Rewards $rewards,
+        private CourseGate $courses
     ) {
     }
 
@@ -115,6 +117,9 @@ class Saver
         }
 
         $this->applyRewards($quiz, $isNew, $has, $data, $actor);
+        if ($has('courseId')) {
+            $quiz->course_id = $this->course(Arr::get($data, 'courseId'), $quiz, $actor);
+        }
 
         // A new quiz is saved first: the formatter is given it as context.
         if ($isNew) {
@@ -414,6 +419,26 @@ class Saver
         }
 
         return $url;
+    }
+
+    /**
+     * The course a quiz is limited to: one the author may attach (Syllabus
+     * says which), or the one it already has, so someone who may edit the
+     * quiz but not teach the course can still save it unchanged.
+     */
+    private function course(mixed $id, Quiz $quiz, User $actor): ?int
+    {
+        if ($id === null || $id === '' || (int) $id === 0) {
+            return null;
+        }
+        if ((int) $id === $quiz->course_id) {
+            return $quiz->course_id;
+        }
+        if (! in_array((int) $id, array_column($this->courses->attachable($actor), 'id'), true)) {
+            $this->fail('courseId', 'course');
+        }
+
+        return (int) $id;
     }
 
     private function badge(mixed $id): ?int

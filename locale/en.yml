@@ -17,6 +17,7 @@ ernestdefoe-brainstorm:
     no_questions: This quiz has no questions yet.
     slow_down: Too many requests in a short time. Wait a few minutes and try again.
     busy: Still starting your attempt. Try again in a moment.
+    course: You can only limit a quiz to a course you teach.
     assessment_title: Give the assessment a title of up to 200 characters.
     assessment_empty: Add at least one quiz before publishing.
     assessment_too_many: An assessment can hold up to {max} quizzes.
@@ -45,6 +46,7 @@ ernestdefoe-brainstorm:
       create: Write a new quiz
 
     facts:
+      course_only: Course members only
       questions: "{count, plural, one {# question} other {# questions}}"
       pass_mark: "Passing score: {mark}%"
       attempts: "{count, plural, one {# attempt} other {# attempts}}"
@@ -283,6 +285,10 @@ ernestdefoe-brainstorm:
       reward_points: Points
       reward_points_help: FoF Gamification points.
       reward_badge: Badge
+      course: Who can take it
+      course_everyone: Everyone who can view quizzes
+      course_other: Another course (kept as it is)
+      course_help: Limit the quiz to members enrolled in one of your Syllabus courses. Its instructors and course managers see it too.
       no_badge: No badge
       save_draft: Save draft
       unpublish: Back to draft
