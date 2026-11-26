@@ -110,16 +110,13 @@ class Saver
         $quiz->opens_at = $checked['opensAt'];
         $quiz->closes_at = $checked['closesAt'];
 
-        $this->applySettings($quiz, $has, $data);
+        $this->applySettings($quiz, $has, $data, $actor);
 
         if ($checked['status'] === 'published' && ! $quiz->published_at) {
             $quiz->published_at = Carbon::now();
         }
 
         $this->applyRewards($quiz, $isNew, $has, $data, $actor);
-        if ($has('courseId')) {
-            $quiz->course_id = $this->course(Arr::get($data, 'courseId'), $quiz, $actor);
-        }
 
         // A new quiz is saved first: the formatter is given it as context.
         if ($isNew) {
@@ -153,8 +150,11 @@ class Saver
      * @param callable(string): bool $has
      * @param array<string, mixed> $data
      */
-    private function applySettings(Quiz $quiz, callable $has, array $data): void
+    private function applySettings(Quiz $quiz, callable $has, array $data, User $actor): void
     {
+        if ($has('courseId')) {
+            $quiz->course_id = $this->course(Arr::get($data, 'courseId'), $quiz, $actor);
+        }
         foreach ([
             'time_limit' => ['timeLimit', 10, 86400],
             'max_attempts' => ['maxAttempts', 1, 1000],
