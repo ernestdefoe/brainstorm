@@ -66,6 +66,8 @@ ernestdefoe-brainstorm:
     index:
       title: Quizzes
       new: New quiz
+      new_assessment: New assessment
+      no_assessments: No assessments yet.
       search: Search quizzes
       more: Load more
       empty: No quizzes yet.
@@ -74,6 +76,57 @@ ernestdefoe-brainstorm:
         new: Newest
         popular: Most played
         mine: Mine
+        assessments: Assessments
+
+    assessment:
+      missing: This assessment doesn't exist, or you can't see it.
+      count: "{count, plural, one {# quiz} other {# quizzes}}"
+      pass_mark: "Passing score: {mark}%"
+      progress: "{done} of {total} quizzes finished · {required} required · passing score {mark}%"
+      standing: "{percent} · {done} of {total} finished"
+      complete: Completed!
+      in_progress: In progress
+      not_started: Not started yet
+      log_in: Log in to see your progress.
+      weighted_note: Some quizzes count more than others toward the overall result.
+      locked: A quiz you can't see yet
+      optional: Optional
+      weight: "Counts ×{weight}"
+      not_taken: Not taken yet
+      open: Open
+      edit: Edit assessment
+      delete: Delete
+      delete_confirm: Delete this assessment? Its quizzes and everyone's results at them stay.
+
+    assessment_editor:
+      new_title: New assessment
+      edit_title: Edit assessment
+      title: Title
+      description: Description
+      quizzes: "Quizzes ({count})"
+      quizzes_help: Each quiz stays its own quiz. The overall result is the average of a member's best score at the quizzes they have finished.
+      add: Add a quiz…
+      all_added: Every quiz you can add is already here.
+      no_quizzes: There are no quizzes to add yet.
+      quiz_number: "Quiz {id}"
+      weight: Weight
+      required: Required
+      up: Move up
+      down: Move down
+      remove: Remove
+      settings: Settings
+      pass_mark: Passing score (%)
+      pass_mark_help: Completed when every required quiz is finished and the average reaches this.
+      weighting: Overall result
+      weighting_equal: Every quiz counts the same
+      weighting_weighted: Weighted (set a weight per quiz)
+      save_draft: Save draft
+      unpublish: Back to draft
+      publish: Publish
+      save: Save
+      saved: Saved.
+      published: Published.
+      save_failed: The assessment couldn't be saved.
 
     quiz:
       all: All quizzes

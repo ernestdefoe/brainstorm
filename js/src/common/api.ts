@@ -193,7 +193,7 @@ function person(user: ResourceObject | undefined): Person | null {
 function flatten<T>(resource: ResourceObject, included: ResourceObject[] = []): T {
   const author = resource.relationships?.user?.data;
   const out: Record<string, any> = { id: Number(resource.id), ...resource.attributes };
-  if (resource.type === 'quizzes') out.author = person(included.find((r) => r.type === 'users' && author && r.id === author.id));
+  if (resource.relationships?.user) out.author = person(included.find((r) => r.type === 'users' && author && r.id === author.id));
 
   return out as T;
 }
@@ -208,12 +208,13 @@ const resource = (type: string, attributes: object, id?: number) => ({ data: { t
 /** The JSON:API way to sort: "popular" is the most-played first, newest first among equals. */
 const SORTS: Record<string, string> = { popular: '-attemptCount,-publishedAt' };
 
-export function listQuizzes(params: { filter?: Record<string, string>; sort?: string; page?: { offset?: number } }) {
+export function listQuizzes(params: { filter?: Record<string, string>; sort?: string; page?: { offset?: number; limit?: number } }) {
   const offset = params.page?.offset || 0;
-  const page = { offset, total: 0, ...(params.filter?.ids ? { limit: 50 } : {}) };
+  const limit = params.page?.limit || (params.filter?.ids ? 50 : undefined);
+  const page = { offset, total: 0, ...(limit ? { limit } : {}) };
   const sort = params.sort ? SORTS[params.sort] : undefined;
 
-  return request('GET', '/quizzes', undefined, { filter: params.filter, page, ...(sort ? { sort } : {}) }).then((doc) => {
+  return request('GET', '/quizzes', undefined, { ...(params.filter ? { filter: params.filter } : {}), page, ...(sort ? { sort } : {}) }).then((doc) => {
     const data = (doc.data as ResourceObject[]).map((r) => flatten<Quiz>(r, doc.included));
 
     return { data, meta: { canCreate: !!app.forum.attribute('canCreateQuizzes'), next: doc.links?.next ? offset + data.length : null } };
@@ -287,6 +288,80 @@ export function saveAnswersOnLeave(id: number, answers: Record<string, Answer>):
   }).catch(() => {
     // Nothing to tell: the page is already going away.
   });
+}
+
+export type Weighting = 'equal' | 'weighted';
+
+/** One quiz in an assessment, as the reader may see it: one they can't see is only "locked". */
+export interface AssessmentQuiz {
+  id: number | null;
+  locked: boolean;
+  title?: string;
+  slug?: string;
+  weight: number;
+  required: boolean;
+  best?: { percent: number; passed: boolean } | null;
+}
+
+export interface AssessmentStanding {
+  done: number;
+  required: number;
+  total: number;
+  percent: number | null;
+  complete: boolean;
+}
+
+export interface AssessmentItem {
+  quizId: number;
+  weight: number;
+  required: boolean;
+}
+
+export interface Assessment {
+  id: number;
+  title: string;
+  slug: string;
+  description: string | null;
+  status: 'draft' | 'published';
+  passMark: number;
+  weighting: Weighting;
+  publishedAt: string | null;
+  canEdit: boolean;
+  quizzes: AssessmentQuiz[];
+  me?: AssessmentStanding | null;
+  items?: AssessmentItem[];
+  author: Person | null;
+}
+
+export interface EditableAssessment {
+  title: string;
+  description: string;
+  status: 'draft' | 'published';
+  passMark: number;
+  weighting: Weighting;
+  items: AssessmentItem[];
+}
+
+export function listAssessments(offset = 0) {
+  return request('GET', '/quiz-assessments', undefined, { page: { offset, total: 0 } }).then((doc) => {
+    const data = (doc.data as ResourceObject[]).map((r) => flatten<Assessment>(r, doc.included));
+
+    return { data, next: doc.links?.next ? offset + data.length : null };
+  });
+}
+
+export const showAssessment = (id: number) => request('GET', `/quiz-assessments/${id}`).then((doc) => one<Assessment>(doc));
+
+export const saveAssessment = (data: EditableAssessment, id?: number) =>
+  request(id ? 'PATCH' : 'POST', id ? `/quiz-assessments/${id}` : '/quiz-assessments', resource('quiz-assessments', data, id)).then((doc) =>
+    one<Assessment>(doc)
+  );
+
+export const deleteAssessment = (id: number) => request('DELETE', `/quiz-assessments/${id}`).then(() => undefined);
+
+/** "/quizzes/assessments/3-javascript" */
+export function assessmentUrl(a: { id: number; slug: string }): string {
+  return app.route('brainstorm.assessment', { id: a.id + (a.slug ? '-' + a.slug : '') });
 }
 
 /** "/quizzes/12-capitals" */

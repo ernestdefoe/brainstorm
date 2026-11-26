@@ -7,18 +7,20 @@ import LinkButton from 'flarum/common/components/LinkButton';
 import LoadingIndicator from 'flarum/common/components/LoadingIndicator';
 import extractText from 'flarum/common/utils/extractText';
 import type Mithril from 'mithril';
-import { listQuizzes } from '../../common/api';
-import type { Quiz } from '../../common/api';
+import { listAssessments, listQuizzes } from '../../common/api';
+import type { Assessment, Quiz } from '../../common/api';
+import AssessmentCard from '../components/AssessmentCard';
 import QuizCard from '../components/QuizCard';
 import Leaderboard from '../components/Leaderboard';
 
 const t = (key: string, params: Record<string, unknown> = {}) => app.translator.trans(`ernestdefoe-brainstorm.forum.${key}`, params);
 
-type Tab = 'new' | 'popular' | 'mine';
+type Tab = 'new' | 'popular' | 'mine' | 'assessments';
 
 /** /quizzes — every quiz the reader may see, with the overall leaderboard alongside. */
 export default class QuizzesPage extends Page {
   quizzes: Quiz[] = [];
+  assessments: Assessment[] = [];
   loading = true;
   next: number | null = null;
   canCreate = false;
@@ -36,6 +38,8 @@ export default class QuizzesPage extends Page {
 
   load(more = false) {
     this.loading = true;
+    if (this.tab === 'assessments') return this.loadAssessments(more);
+
     const params: Record<string, unknown> = { filter: {} as Record<string, string> };
     if (this.tab === 'popular') params.sort = 'popular';
     if (this.tab === 'mine') (params.filter as any).mine = '1';
@@ -60,6 +64,24 @@ export default class QuizzesPage extends Page {
     );
   }
 
+  /** Assessments: newest first, with the reader's standing at each. */
+  loadAssessments(more: boolean) {
+    const ask = ++this.asked;
+    listAssessments(more && this.next ? this.next : 0).then(
+      ({ data, next }) => {
+        if (ask !== this.asked) return;
+        this.assessments = more ? [...this.assessments, ...data] : data;
+        this.next = next;
+        this.loading = false;
+        m.redraw();
+      },
+      () => {
+        this.loading = false;
+        m.redraw();
+      }
+    );
+  }
+
   switchTo(tab: Tab) {
     this.tab = tab;
     this.load();
@@ -71,8 +93,12 @@ export default class QuizzesPage extends Page {
         <div className="BrainstormIndexPage-head">
           <h2 className="BrainstormIndexPage-title">{t('index.title')}</h2>
           {this.canCreate ? (
-            <LinkButton className="Button Button--primary" icon="fas fa-plus" href={app.route('brainstorm.new')}>
-              {t('index.new')}
+            <LinkButton
+              className="Button Button--primary"
+              icon="fas fa-plus"
+              href={app.route(this.tab === 'assessments' ? 'brainstorm.assessment.new' : 'brainstorm.new')}
+            >
+              {t(this.tab === 'assessments' ? 'index.new_assessment' : 'index.new')}
             </LinkButton>
           ) : null}
         </div>
@@ -89,7 +115,7 @@ export default class QuizzesPage extends Page {
     return (
       <div className="BrainstormIndexPage-toolbar">
         <div className="BrainstormTabs" role="tablist">
-          {(['new', 'popular', ...(this.canCreate ? ['mine'] : [])] as Tab[]).map((tab) => (
+          {(['new', 'popular', ...(this.canCreate ? ['mine'] : []), 'assessments'] as Tab[]).map((tab) => (
             <Button
               className={'Button Button--flat' + (this.tab === tab ? ' active' : '')}
               role="tab"
@@ -100,18 +126,20 @@ export default class QuizzesPage extends Page {
             </Button>
           ))}
         </div>
-        <input
-          className="FormControl BrainstormIndexPage-search"
-          type="search"
-          placeholder={extractText(t('index.search'))}
-          aria-label={extractText(t('index.search'))}
-          value={this.query}
-          oninput={(e: InputEvent) => {
-            this.query = (e.target as HTMLInputElement).value;
-            window.clearTimeout(this.searchTimer);
-            this.searchTimer = window.setTimeout(() => this.load(), 300);
-          }}
-        />
+        {this.tab === 'assessments' ? null : (
+          <input
+            className="FormControl BrainstormIndexPage-search"
+            type="search"
+            placeholder={extractText(t('index.search'))}
+            aria-label={extractText(t('index.search'))}
+            value={this.query}
+            oninput={(e: InputEvent) => {
+              this.query = (e.target as HTMLInputElement).value;
+              window.clearTimeout(this.searchTimer);
+              this.searchTimer = window.setTimeout(() => this.load(), 300);
+            }}
+          />
+        )}
       </div>
     );
   }
@@ -121,11 +149,15 @@ export default class QuizzesPage extends Page {
     return (
       <div className="BrainstormIndexPage-body">
         <div className="BrainstormIndexPage-list">
-          {this.quizzes.map((quiz) => (
-            <QuizCard key={quiz.id} quiz={quiz} />
-          ))}
+          {this.tab === 'assessments'
+            ? this.assessments.map((a) => <AssessmentCard key={'a' + a.id} assessment={a} />)
+            : this.quizzes.map((quiz) => <QuizCard key={quiz.id} quiz={quiz} />)}
           {this.loading ? <LoadingIndicator display="block" /> : null}
-          {!this.loading && !this.quizzes.length ? <p className="BrainstormEmpty">{t(this.query ? 'index.no_results' : 'index.empty')}</p> : null}
+          {!this.loading && !(this.tab === 'assessments' ? this.assessments : this.quizzes).length ? (
+            <p className="BrainstormEmpty">
+              {t(this.tab === 'assessments' ? 'index.no_assessments' : this.query ? 'index.no_results' : 'index.empty')}
+            </p>
+          ) : null}
           {!this.loading && this.next ? (
             <Button className="Button BrainstormIndexPage-more" onclick={() => this.load(true)}>
               {t('index.more')}

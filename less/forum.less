@@ -967,3 +967,121 @@
     color: var(--control-color);
   }
 }
+
+// Assessments: a group of quizzes with one overall result.
+.BrainstormAssessmentSummary {
+  margin: 16px 0;
+
+  // Not failed, just not finished: the forum's own colour, not the "not passed" red.
+  &.is-open .BrainstormResult-ring {
+    --brainstorm-tone: var(--primary-color);
+  }
+}
+.BrainstormAssessmentPage-description {
+  color: var(--text-color);
+  white-space: pre-line;
+}
+.BrainstormAssessmentPage-quizzes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--control-bg);
+}
+.BrainstormAssessmentQuiz {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--control-bg);
+  color: var(--text-color);
+}
+.BrainstormAssessmentQuiz-number {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--control-bg);
+  color: var(--control-color);
+  font-weight: 600;
+}
+.BrainstormAssessmentQuiz-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  overflow-wrap: anywhere;
+
+  a {
+    color: var(--text-color);
+    font-weight: 600;
+  }
+}
+.BrainstormAssessmentQuiz-meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.BrainstormAssessmentQuiz-locked,
+.BrainstormAssessmentQuiz-todo {
+  color: var(--muted-color);
+}
+.BrainstormAssessmentQuiz-score {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--muted-color);
+}
+.BrainstormAssessmentQuiz.is-passed .BrainstormAssessmentQuiz-score {
+  color: var(--control-success-color);
+}
+
+.BrainstormAssessmentEditor-items {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+.BrainstormAssessmentEditor-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--control-bg);
+  border-radius: var(--border-radius);
+  color: var(--text-color);
+}
+.BrainstormAssessmentEditor-title {
+  flex: 1 1 120px;
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.BrainstormAssessmentEditor-weight {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+
+  .FormControl {
+    width: 72px;
+  }
+}
+.BrainstormAssessmentEditor-required {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+.BrainstormAssessmentEditor-tools {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.BrainstormAssessmentEditor-add .Select {
+  max-width: 100%;
+}
